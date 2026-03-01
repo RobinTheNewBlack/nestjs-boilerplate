@@ -1,9 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { CustomerService } from './customer.service';
+import { CreateCustomerDto } from './dto/create-customer.dto'
+import { UpdateCustomerDto } from './dto/update-customer.dto'
+import { QueryCustomerDto } from './dto/query-customer.dto'
 
 @Controller('customers')
 export class CustomerController {
     constructor(private readonly customerService: CustomerService) { }
+
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    create(@Body() data: CreateCustomerDto) {
+        return this.customerService.createCustomer(data);
+    }
 
     @Get(':id')
     findOne(@Param('id') id: string) {
@@ -11,13 +20,8 @@ export class CustomerController {
     }
 
     @Get()
-    findAll() {
-        return this.customerService.getAllCustomers();
-    }
-
-    @Post()
-    create(@Body() createCustomerDto: any) {
-        return this.customerService.createCustomer(createCustomerDto);
+    findAll(@Query() query: QueryCustomerDto) {
+        return this.customerService.getAllCustomers(query);
     }
 
     @Put(':id')
@@ -26,6 +30,7 @@ export class CustomerController {
     }
 
     @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
     remove(@Param('id') id: string) {
         return this.customerService.deleteCustomer(Number(id));
     }
