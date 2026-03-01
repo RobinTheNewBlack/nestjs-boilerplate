@@ -281,100 +281,7 @@ export class CustomerRepository {
 
 ---
 
-## 5. การใช้งาน Prisma แบบครบวงจรในโปรเจกต์ NestJS
-
-Prisma คือเครื่องมือ ORM (Object-Relational Mapping) ที่จะมาทำหน้าที่ในส่วนของ **Repository Layer** แทนที่เราจะเขียนคำสั่ง SQL ดิบๆ (`SELECT * FROM users`) Prisma จะให้เราเขียนเป็นโค้ด JavaScript/TypeScript สะอาดๆ (`prisma.user.findMany()`) แทน
-
-### ไฟล์ของ Prisma มีอะไรบ้าง และอยู่ที่ไหน?
-
-**1. `prisma/schema.prisma`** (หัวใจหลักของ Prisma)
-- **หน้าที่:** เป็นไฟล์สำหรับกำหนดว่าจะต่อ Database อะไร (เช่น PostgreSQL, MySQL, SQLite) และ **ออกแบบตารางข้อมูลลงในนี้ทั้งหมด** (Models)
-- **ตัวอย่าง:**
-  ```prisma
-  generator client {
-    provider = "prisma-client-js"
-  }
-  datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-  }
-  model Customer {
-    id    Int     @id @default(autoincrement())
-    name  String
-    email String  @unique
-  }
-  ```
-
-**2. `.env`** (อยู่โฟลเดอร์ Root นอกสุด, ระดับเดียวกับ package.json)
-- **หน้าที่:** เก็บค่า Configuration ที่เป็นความลับ เช่น รหัสผ่าน หรือ URL ของ Database (`DATABASE_URL`) ห้ามเอาขึ้น Git เด็ดขาด หากไฟล์นี้ไม่มีอยู่ ต้องสร้างขึ้นมาเอง
-- **ตัวอย่าง:**
-  ```env
-  DATABASE_URL="postgresql://user:password@localhost:5432/my_database_name"
-  ```
-
-**3. โฟลเดอร์ `prisma/migrations/`**
-- **หน้าที่:** เก็บประวัติการเปลี่ยนแปลงโครงสร้างฐานข้อมูล (Database Schema History) โฟลเดอร์นี้จะประกอบไปด้วยไฟล์ SQL (`migration.sql`) ที่บอกว่าเรามีการสร้างตารางใหม่ หรือเพิ่มคอลัมน์ไปบ้าง โฟลเดอร์นี้จะถูกสร้างและอัปเดตอัตโนมัติเมื่อเรารันคำสั่ง `migrate`
-
-**4. `src/prisma/prisma.service.ts`** (ไฟล์นี้เราต้องสร้างขึ้นมาเองในโครงสร้าง NestJS)
-- **หน้าที่:** เป็นตัวสร้างสะพานเชื่อมระหว่าง NestJS กับ Prisma Client เพื่อให้ไฟล์อื่นๆ (พวก Service หรือ Repository ของเรา) สามารถดึง Prisma ไปใช้ Query ข้อมูลได้
-- **ตัวอย่างแบบง่ายๆ:**
-  ```typescript
-  import { Injectable, OnModuleInit } from '@nestjs/common';
-  import { PrismaClient } from '@prisma/client';
-
-  @Injectable()
-  export class PrismaService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-      await this.$connect(); // สั่งเชื่อมต่อ DB ตอนรันเซิร์ฟเวอร์
-    }
-  }
-  ```
-
-**5. การเรียกใช้ Prisma ใน Repository หรือ Service** (`src/modules/.../*.repository.ts`)
-- **หน้าที่:** เมื่อมี `PrismaService` แล้ว เราก็จะเอามันมา Inject ใช้ใน Repository หรือ Service เพื่อทำงานกับข้อมูลจริงๆ
-- **ตัวอย่าง:**
-  ```typescript
-  import { Injectable } from '@nestjs/common';
-  import { PrismaService } from '../../prisma/prisma.service';
-
-  @Injectable()
-  export class CustomerRepository {
-    constructor(private prisma: PrismaService) {}
-
-    async findAllCustomers() {
-      // ใช้ Prisma ดึงข้อมูลลูกค้าทั้งหมด
-      return this.prisma.customer.findMany(); 
-    }
-  }
-  ```
-
----
-
-### Command (คำสั่ง) ของ Prisma ที่ใช้บ่อยตอนใช้งานจริง
-
-#### **ช่วงออกแบบ / แก้ไขตาราง (Schema)**
-1. **`npx prisma migrate dev --name <ชื่อการเปลี่ยนแปลง>`**
-   - **ใช้ตอนไหน:** ใช้เมื่อมีการเข้าไป **เพิ่ม/ลด/แก้ไข ตารางใน `schema.prisma`** แล้วอยากให้ Database จริงๆ เปลี่ยนแปลงตาม
-   - **สิ่งที่เกิดขึ้น:** ระบบจะนำโครงสร้างไปอัปเดตตารางจริง (ในฐานข้อมูล), สร้างโฟลเดอร์ `prisma/migrations` เก็บไฟล์ SQL ประวัติไว้, และอัปเดตโค้ดฝั่ง TypeScript (Prisma Client) ให้อัตโนมัติ
-   - *หมายเหตุ: หากไม่มีไฟล์ `.env` ที่กำหนด `DATABASE_URL` ไว้ คำสั่งนี้จะ Error ทันที*
-   
-2. **`npx prisma db push`**
-   - **ใช้ตอนไหน:** คล้าย `migrate dev` คือบังคับอัปเดตโครงสร้างตารางจริงใน Database ให้ตรงตาม `schema.prisma` **แต่จะไม่สร้างไฟล์ประวัติ (Migration) เก็บไว้**
-   - **เหมาะกับ:** ตอนทดลองทำโปรเจกต์ใหม่ๆ หรือช่วง Prototype ที่แก้โครงสร้างบ่อยๆ และไม่อยากให้มีไฟล์ Migration ขยะรกโฟลเดอร์
-
-3. **`npx prisma generate`**
-   - **ใช้ตอนไหน:** ใช้เมื่อมีการติดตั้งแพ็คเกจใหม่, โคลนโปรเจกต์มาจาก GitHub (ซึ่งไม่ได้เอา `node_modules` มาด้วย), หรือเมื่อ Auto-complete ในโค้ดไม่ยอมทำงาน คำสั่งนี้จะบังคับสร้าง Typings ของ TypeScript ให้ใหม่ตาม `schema.prisma` ปัจจุบัน
-
-#### **ช่วงจัดการข้อมูล (Database Management)**
-4. **`npx prisma studio`**
-   - **ใช้ตอนไหน:** เป็นคำสั่งที่เปิดหน้าเว็บเบราว์เซอร์ (มักจะเป็น `localhost:5555`) ขึ้นมาเป็น UI โปรแกรมจัดการ Database ย่อมๆ ให้คุณเข้าไปดู, เพิ่ม, ลบ, แก้ไข ข้อมูลใน Database ได้โดยตรงเหมือนใช้โปรแกรม Excel สะดวกมากสำหรับการตรวจเช็คข้อมูล
-
-5. **`npx prisma db seed`**
-   - **ใช้ตอนไหน:** รันคำสั่งนี้เพื่อนำข้อมูลจำลอง (Mock Data) หรือข้อมูลตั้งต้นใส่เข้าไปใน Database เพื่อให้ระบบพร้อมใช้งาน (เช่น สร้าง Admin ผู้ใช้งานเริ่มต้น หรือข้อมูลสินค้าสมมติ) โดยจะไปอ่านสคริปต์จากไฟล์ `prisma/seed.ts` (ถ้ามีการตั้งค่าและเขียนเตรียมไว้)
-
----
-
-## 6. Pipe และการทำ Data Validation (DTO)
+## 5. Pipe และการทำ Data Validation (DTO)
 
 **Pipe** ใน NestJS คือคลาสที่เข้ามาคั่นกลาง (Intercept) ตอนที่ Client ส่งข้อมูลเข้ามา (Request) ก่อนที่ข้อมูลนั้นจะถูกส่งต่อไปถึง Controller สอดคล้องกับภาพตัวอย่างที่คุณส่งมา Pipes มี 2 หน้าที่หลัก คือ:
 
@@ -584,3 +491,219 @@ NestJS มี Pipes สำเร็จรูปมาให้ 9 ตัวหล
   - การกำหนดฟิลด์ว่าห้ามซ้ำซ้อน (`@unique` ใน Prisma)
   - การทำเงื่อนไขตอนลบข้อมูล (Foreign Key constraints) เช่น ถ้าลบ User นี้ ต้องลบ Post ของเขาทิ้งด้วยไหม
   - การกำหนดค่าเริ่มต้น (Default values) เช่น ถ้าไม่ส่งเวลามา ให้เอาเวลาปัจจุบัน (`@default(now())`)
+## 6. การใช้งาน Prisma แบบครบวงจรในโปรเจกต์ NestJS
+
+Prisma คือเครื่องมือ ORM (Object-Relational Mapping) ที่จะมาทำหน้าที่ในส่วนของ **Repository Layer** แทนที่เราจะเขียนคำสั่ง SQL ดิบๆ (`SELECT * FROM users`) Prisma จะให้เราเขียนเป็นโค้ด JavaScript/TypeScript สะอาดๆ (`prisma.user.findMany()`) แทน
+
+### 📦 ก่อนเริ่มใช้งาน Prisma ต้องจัดการเรื่องติดตั้งอะไรบ้าง?
+
+ปกติแล้วเวลาเราเริ่มต้นโปรเจกต์ NestJS ขึ้นมาใหม่ มันจะยังไม่รู้จัก Prisma เราจึงต้องทำการติดตั้งแพ็กเกจที่จำเป็นลงไปก่อน ตามลำดับนี้:
+
+1. **ติดตั้ง Prisma CLI (เครื่องมือพิมพ์คำสั่งจัดการ Database)**
+   เปิด Terminal แล้วพิมพ์รัน:
+   ```bash
+   npm install prisma --save-dev
+   ```
+   *(หมายเหตุ: ติดตั้งเป็น `--save-dev` เพราะตัวนี้เอาไว้ให้เราพิมพ์คำสั่งสร้างนู่นนี่ตอนพัฒนาโค้ดเท่านั้น)*
+
+2. **ติดตั้ง Prisma Client (เครื่องมือสำหรับเขียนโค้ดต่อกับ Database ประจำโปรเจกต์)**
+   พิมพ์รัน:
+   ```bash
+   npm install @prisma/client
+   ```
+   *(หมายเหตุ: ตัวนี้ต้องติดลง Dependency ปกติ เพราะระบบต้องเอามันไปรันใช้งานจริงบนเซิร์ฟเวอร์ด้วย)*
+
+3. **สั่งเปิดใช้งาน Prisma ในโปรเจกต์ (Initialize)**
+   พอโหลดแพ็กเกจ 2 ตัวบนเสร็จแล้ว ให้รันคำสั่งนี้ต่อเพื่อสร้างหน้ากระดาษเปล่าๆ เริ่มทำงาน:
+   ```bash
+   npx prisma init
+   ```
+   เมื่อรันเสร็จปุ๊บ มันจะสร้างโฟลเดอร์ `prisma` (มาพร้อมไฟล์ `schema.prisma`) และไฟล์ `.env` ขึ้นมาให้เราเตรียมพร้อมตั้งค่าเชื่อมต่อฐานข้อมูลได้ทันที
+
+---
+
+### ไฟล์ของ Prisma มีอะไรบ้าง และอยู่ที่ไหน?
+
+**1. `prisma/schema.prisma`** (หัวใจหลักของ Prisma)
+- **หน้าที่:** เป็นไฟล์สำหรับกำหนดว่าจะต่อ Database อะไร (เช่น PostgreSQL, MySQL, SQLite) และ **ออกแบบตารางข้อมูลลงในนี้ทั้งหมด** (Models)
+- **ตัวอย่าง:**
+  ```prisma
+  generator client {
+    provider = "prisma-client-js"
+  }
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
+  model Customer {
+    id    Int     @id @default(autoincrement())
+    name  String
+    email String  @unique
+  }
+  ```
+
+**2. `.env`** (อยู่โฟลเดอร์ Root นอกสุด, ระดับเดียวกับ package.json)
+- **หน้าที่:** เก็บค่า Configuration ที่เป็นความลับ เช่น รหัสผ่าน หรือ URL ของ Database (`DATABASE_URL`) ห้ามเอาขึ้น Git เด็ดขาด หากไฟล์นี้ไม่มีอยู่ ต้องสร้างขึ้นมาเอง
+- **ตัวอย่าง:**
+  ```env
+  DATABASE_URL="postgresql://user:password@localhost:5432/my_database_name"
+  ```
+
+**3. โฟลเดอร์ `prisma/migrations/`**
+- **หน้าที่:** เก็บประวัติการเปลี่ยนแปลงโครงสร้างฐานข้อมูล (Database Schema History) โฟลเดอร์นี้จะประกอบไปด้วยไฟล์ SQL (`migration.sql`) ที่บอกว่าเรามีการสร้างตารางใหม่ หรือเพิ่มคอลัมน์ไปบ้าง โฟลเดอร์นี้จะถูกสร้างและอัปเดตอัตโนมัติเมื่อเรารันคำสั่ง `migrate`
+
+**4. `src/prisma/prisma.service.ts`** (ไฟล์นี้เราต้องสร้างขึ้นมาเองในโครงสร้าง NestJS)
+- **หน้าที่:** เป็นตัวสร้างสะพานเชื่อมระหว่าง NestJS กับ Prisma Client เพื่อให้ไฟล์อื่นๆ (พวก Service หรือ Repository ของเรา) สามารถดึง Prisma ไปใช้ Query ข้อมูลได้
+- **ตัวอย่างแบบง่ายๆ:**
+  ```typescript
+  import { Injectable, OnModuleInit } from '@nestjs/common';
+  import { PrismaClient } from '@prisma/client';
+
+  @Injectable()
+  export class PrismaService extends PrismaClient implements OnModuleInit {
+    async onModuleInit() {
+      await this.$connect(); // สั่งเชื่อมต่อ DB ตอนรันเซิร์ฟเวอร์
+    }
+  }
+  ```
+
+**5. การเรียกใช้ Prisma ใน Repository หรือ Service** (`src/modules/.../*.repository.ts`)
+- **หน้าที่:** เมื่อมี `PrismaService` แล้ว เราก็จะเอามันมา Inject ใช้ใน Repository หรือ Service เพื่อทำงานกับข้อมูลจริงๆ
+- **ตัวอย่าง:**
+  ```typescript
+  import { Injectable } from '@nestjs/common';
+  import { PrismaService } from '../../prisma/prisma.service';
+
+  @Injectable()
+  export class CustomerRepository {
+    constructor(private prisma: PrismaService) {}
+
+    async findAllCustomers() {
+      // ใช้ Prisma ดึงข้อมูลลูกค้าทั้งหมด
+      return this.prisma.customer.findMany(); 
+    }
+  }
+  ```
+
+---
+
+### Command (คำสั่ง) ของ Prisma ที่ใช้บ่อยตอนใช้งานจริง
+
+#### **ช่วงออกแบบ / แก้ไขตาราง (Schema)**
+1. **`npx prisma migrate dev --name <ชื่อการเปลี่ยนแปลง>`**
+   - **ใช้ตอนไหน:** ใช้เมื่อมีการเข้าไป **เพิ่ม/ลด/แก้ไข ตารางใน `schema.prisma`** แล้วอยากให้ Database จริงๆ เปลี่ยนแปลงตาม
+   - **สิ่งที่เกิดขึ้น:** ระบบจะนำโครงสร้างไปอัปเดตตารางจริง (ในฐานข้อมูล), สร้างโฟลเดอร์ `prisma/migrations` เก็บไฟล์ SQL ประวัติไว้, และอัปเดตโค้ดฝั่ง TypeScript (Prisma Client) ให้อัตโนมัติ
+   - *หมายเหตุ: หากไม่มีไฟล์ `.env` ที่กำหนด `DATABASE_URL` ไว้ คำสั่งนี้จะ Error ทันที*
+   
+2. **`npx prisma db push`**
+   - **ใช้ตอนไหน:** คล้าย `migrate dev` คือบังคับอัปเดตโครงสร้างตารางจริงใน Database ให้ตรงตาม `schema.prisma` **แต่จะไม่สร้างไฟล์ประวัติ (Migration) เก็บไว้**
+   - **เหมาะกับ:** ตอนทดลองทำโปรเจกต์ใหม่ๆ หรือช่วง Prototype ที่แก้โครงสร้างบ่อยๆ และไม่อยากให้มีไฟล์ Migration ขยะรกโฟลเดอร์
+
+3. **`npx prisma generate`**
+   - **ใช้ตอนไหน:** ใช้เมื่อมีการติดตั้งแพ็คเกจใหม่, โคลนโปรเจกต์มาจาก GitHub (ซึ่งไม่ได้เอา `node_modules` มาด้วย), หรือเมื่อ Auto-complete ในโค้ดไม่ยอมทำงาน คำสั่งนี้จะบังคับสร้าง Typings ของ TypeScript ให้ใหม่ตาม `schema.prisma` ปัจจุบัน
+
+#### **ช่วงจัดการข้อมูล (Database Management)**
+4. **`npx prisma studio`**
+   - **ใช้ตอนไหน:** เป็นคำสั่งที่เปิดหน้าเว็บเบราว์เซอร์ (มักจะเป็น `localhost:5555`) ขึ้นมาเป็น UI โปรแกรมจัดการ Database ย่อมๆ ให้คุณเข้าไปดู, เพิ่ม, ลบ, แก้ไข ข้อมูลใน Database ได้โดยตรงเหมือนใช้โปรแกรม Excel สะดวกมากสำหรับการตรวจเช็คข้อมูล
+
+5. **`npx prisma db seed`**
+   - **ใช้ตอนไหน:** รันคำสั่งนี้เพื่อนำข้อมูลจำลอง (Mock Data) หรือข้อมูลตั้งต้นใส่เข้าไปใน Database เพื่อให้ระบบพร้อมใช้งาน (เช่น สร้าง Admin ผู้ใช้งานเริ่มต้น หรือข้อมูลสินค้าสมมติ) โดยจะไปอ่านสคริปต์จากไฟล์ `prisma/seed.ts` (ถ้ามีการตั้งค่าและเขียนเตรียมไว้)
+
+---
+
+## 7. Built-in HTTP Exceptions (ตัวจัดการ Error อัตโนมัติ)
+
+NestJS มี standard exceptions ที่สืบทอดมาจาก `HttpException` แบบพร้อมใช้งานทันที (Built-in) ซึ่งถูกรวบรวมไว้ที่แพ็กเกจ `@nestjs/common` ช่วยให้เราโยน (throw) Error กลับไปให้ Client ได้ง่าย เป็นมาตรฐาน และโค้ดอ่านง่ายขึ้น โดยไม่ต้องจำ HTTP Status Code เป็นตัวเลขเองทั้งหมด
+
+### 🛠️ วิธีใช้งานเบื้องต้น:
+ปกติเรามักจะโยน (throw) Exception เหล่านี้ในชั้น **Service** หรือ **Controller** เมื่อเกิดข้อผิดพลาดตามเงื่อนไข (Business Logic) เมื่อเราสั่ง throw ปุ๊บ การประมวลผลโค้ดบรรทัดต่อๆ ไปจะหยุดทันที แล้ว NestJS จะตีกลับเป็น Response หน้าตามาตรฐานส่งให้ Client อัตโนมัติ
+
+**ตัวอย่างโค้ด:**
+```typescript
+import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
+
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    const user = this.userService.findById(id);
+    
+    if (!user) {
+      // โยน Exception ปุ๊บ โค้ดจะหยุดทำงานและตอบกลับเป็น HTTP 404 ทันที
+      throw new NotFoundException(`ไม่พบผู้ใช้งาน ID: ${id}`);
+    }
+    
+    return user;
+  }
+}
+```
+*ตัวอย่าง Response ที่ NestJS จะตอบกลับให้แบบอัตโนมัติ:*
+```json
+{
+  "statusCode": 404,
+  "message": "ไม่พบผู้ใช้งาน ID: 123",
+  "error": "Not Found"
+}
+```
+
+---
+
+### 📋 รายการ Built-in HTTP Exceptions ตามที่มีมาให้
+
+1. **`BadRequestException` (HTTP 400)**
+   - **คืออะไร / ใช้ตอนไหน:** เมื่อ Client ส่งข้อมูลมาผิดรูปแบบ ผิดเงื่อนไข (มักเจอบ่อยสุดจากการตรวจ Validation)
+   - **ตัวอย่าง:** ลืมส่ง Field ที่จำเป็น, ส่งตัวอักษรมาในช่องเบอร์โทร, ข้อมูลไม่ผ่าน `class-validator`
+
+2. **`UnauthorizedException` (HTTP 401)**
+   - **คืออะไร / ใช้ตอนไหน:** ล็อกอินไม่ผ่าน หรือ **ยังไม่ระบุตัวตน** (ไม่มี Token / Token หมดอายุ / รหัสผ่านผิด)
+   - **ตัวอย่าง:** พยายามเข้าสู่ระบบจัดการหลังบ้าน แต่ไม่ได้แนบ `Authorization Header` มาด้วย
+
+3. **`ForbiddenException` (HTTP 403)**
+   - **คืออะไร / ใช้ตอนไหน:** ระบุตัวตนแล้ว (เข้าสู่ระบบแล้ว) แต่ **ไม่มีสิทธิ์ (Permission/Role)** ในการทำแอคชันนั้น
+   - **ตัวอย่าง:** User ระดับสมาชิกธรรมดา พยายามทำการลบข้อมูลที่อนุญาตให้เฉพาะ "Admin" ทำได้
+
+4. **`NotFoundException` (HTTP 404)**
+   - **คืออะไร / ใช้ตอนไหน:** ค้นหา Resource หรือข้อมูลที่ร้องขอ **ไม่เจอในระบบ** (หรือเรียกเข้า URL ผิด)
+   - **ตัวอย่าง:** ค้นหาสินค้า ID 99 แต่สืบค้นใน Database แล้วไม่พบสินค้านี้อยู่
+
+5. **`NotAcceptableException` (HTTP 406)**
+   - **คืออะไร / ใช้ตอนไหน:** Server ไม่สามารถตอบข้อมูลกลับเป็น Format ที่ Client เรียกร้องได้ (จาก HTTP Header `Accept`)
+   - **ตัวอย่าง:** Client บังคับให้ Server ส่งข้อมูลเป็น XML แต่ API เราเขียนรองรับการส่งออกมารูปแบบเพียวๆ เป็น JSON เท่านั้น
+
+6. **`RequestTimeoutException` (HTTP 408)**
+   - **คืออะไร / ใช้ตอนไหน:** เมื่อ Server ใช้เวลาประมวลผลนานเกินไป จนเกินขอบเขตจำกัดเวลา (Timeout)
+   - **ตัวอย่าง:** รอการคำนวณข้อมูลใหญ่ๆ หรือรอให้ Database ตอบกลับแบบล่าช้ามากๆ จน Request โดนตัดจบ
+
+7. **`ConflictException` (HTTP 409)**
+   - **คืออะไร / ใช้ตอนไหน:** เมื่อข้อมูลที่ส่งมา **ขัดแย้งกับข้อมูลเดิมที่มีอยู่ก่อนหน้าแล้วในระบบ**
+   - **ตัวอย่าง:** สมัครสมาชิกใหม่ แต่อีเมลถูกใช้ไปก่อนหน้านี้แล้ว (ซ้ำซ้อน) ซึ่งจะขัดแย้งกับ Database เงื่อนไข Unique
+
+8. **`GoneException` (HTTP 410)**
+   - **คืออะไร / ใช้ตอนไหน:** Resource ที่เรียกหานี้เคยมีอยู่แต่ **ถูกลบทิ้งหรือเลิกให้บริการไปอย่างถาวร** (ต่างจาก 404 ตรงนี้)
+   - **ตัวอย่าง:** ยิงต่อเข้าไปที่ API Endpoint เวอร์ชันเก่าที่มีประกาศว่าเลิกใช้ (Deprecated) และถอดออกไปแล้ว
+
+9. **`PayloadTooLargeException` (HTTP 413)**
+   - **คืออะไร / ใช้ตอนไหน:** เมื่อ Request Body หรือไฟล์ขนาด **ใหญ่เกินกว่าที่เซิร์ฟเวอร์ตั้งค่า Limit ไว้**
+   - **ตัวอย่าง:** ผู้ใช้อัปโหลดวิดีโอขนาด 500MB แต่เซิร์ฟเวอร์ตั้ง `Max file size` รับได้สูงสุดแค่ 50MB
+
+10. **`UnsupportedMediaTypeException` (HTTP 415)**
+    - **คืออะไร / ใช้ตอนไหน:** ฝั่ง Client แนบไฟล์/ข้อมูลมาในฟอร์แมตที่เซิร์ฟเวอร์ **ไม่รองรับ** (จาก `Content-Type`)
+    - **ตัวอย่าง:** เซิร์ฟเวอร์เตรียมรับเฉพาะรูปภาพ `.png` หรือ `.jpeg` แต่ผู้ใช้ส่งไฟล์เอกสาร `.pdf` มาให้แทน
+
+11. **`UnprocessableEntityException` (HTTP 422)**
+    - **คืออะไร / ใช้ตอนไหน:** ข้อมูลส่งมาถูก Format ถูกโครงสร้าง แต่เซิร์ฟเวอร์ดันเจอ **ข้อผิดพลาดเชิงลอจิกเฉพาะตัว (Semantic error)**
+    - **ตัวอย่าง:** ไฟล์ภาพที่ส่งมาเป็นนามสกุล `.jpg` จริงอ่านออก แต่อัตราส่วนภาพกว้างคูณยาวไม่เป็นจัตุรัสตามที่ระบบต้องการ หรือส่งรหัสอ้างอิงของไฟล์เสียงที่ไม่ใช่ตามรูปแบบที่กำหนดไว้
+
+12. **`InternalServerErrorException` (HTTP 500)**
+    - **คืออะไร / ใช้ตอนไหน:** เจอ **ข้อผิดพลาดรุนแรงฝั่ง Server** ส่วนมากเกิดจากโค้ดพัง หรือเจอข้อผิดพลาดที่ไม่มีคนดักตีวง (Catch) ไว้
+    - **ตัวอย่าง:** ตัวแปรเป็น Undefined แต่ไปสั่งตีดอทเรียกค่าต่อ `.map()`, หรือเซิร์ฟเวอร์ Database หลักทำร่วงดับกลางอากาศ
+
+13. **`NotImplementedException` (HTTP 501)**
+    - **คืออะไร / ใช้ตอนไหน:** เมื่อฝั่ง Server **ยังไม่ได้สร้างฟีเจอร์หรือ Method ที่ถูกร้องขอมารองรับ (โค้ดยังเขียนไม่เสร็จ)**
+    - **ตัวอย่าง:** ประกาศ API เผื่อไว้ให้ระบบหน้าบ้านก่อนว่าจะมี แต่ฝั่ง Backend ดักรีเทิร์น Error เบรกบอกว่า "เดี๋ยวค่อยทำ ตอนนี้ให้ตายไปก่อน"
+
+14. **`HttpVersionNotSupportedException` (HTTP 505)**
+    - **คืออะไร / ใช้ตอนไหน:** เมื่อ Protocol HTTP Version ของ Client เก่าหรือประหลาดเกินไป จนต้อนรับทำงานด้วยกันไม่ได้ (พบเจอน้อยมาก)
+    - **ตัวอย่าง:** Web Server ปรับแต่งตั้งค่าให้รองรับ HTTP/2.0 ขึ้นไปเท่านั้น แต่ดันมี Client เครื่องรุ่นเก่ายิงต่อด้วย HTTP/1.0
