@@ -10,11 +10,11 @@ import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 
 @Injectable()
 export class CustomerService {
-  constructor(private readonly customerRepository: CustomerRepository) {}
+  constructor(private readonly customerRepository: CustomerRepository) { }
 
   async createCustomer(data: CreateCustomerDto) {
-    if (!data.name) {
-      throw new BadRequestException('ชื่อไม่สามารถเป็นค่าว่างได้');
+    if (!data.firstName || !data.lastName) {
+      throw new BadRequestException('ชื่อและนามสกุลไม่สามารถเป็นค่าว่างได้');
     }
     return await this.customerRepository.create(data);
   }
