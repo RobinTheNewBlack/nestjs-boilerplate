@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CustomerController } from './customer.controller';
-import { CustomerService } from './customer.service';
-import { CustomerRepository } from './customer.repository';
+import { CustomerController } from '@/modules/customers/customer.controller';
+import { CustomerService } from '@/modules/customers/customer.service';
+import { CustomerRepository } from '@/modules/customers/customer.repository';
 
 @Module({
-    controllers: [CustomerController],
-    providers: [CustomerService, CustomerRepository],
+  controllers: [CustomerController],
+  providers: [CustomerService, CustomerRepository],
 })
-export class CustomerModule { }
+export class CustomerModule {}

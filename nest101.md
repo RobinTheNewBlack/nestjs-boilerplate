@@ -82,15 +82,18 @@ export class CustomerController {
 
 ---
 
-## 3. Service (Provider)
-**Service** คือคลาสที่มีหน้าที่จัดการกับ Business Logic หรือกระบวนการการทำงานต่างๆ ล้วนๆ แยกการทำงานออกมาจาก Controller เพื่อให้โค้ดดูสะอาด อ่านง่าย และสามารถเรียกใช้งานซ้ำๆ (Reusable) ได้
+## 3. Provider (เช่น Services, Repositories, Factories, Helpers เป็นต้น)
+**Provider** ถือเป็นคอนเซปต์พื้นฐานที่สำคัญมากใน NestJS คลาสหรือคลาสพื้นฐานหลายๆ ตัวใน NestJS เช่น Service, Repository, Factory, หรือ Helper ต่างก็สามารถทำหน้าที่เป็น (Treated as) Provider ได้ทั้งสิ้น
 
-**หน้าที่หลัก:**
-- ประมวลผล ตัดสินใจ ลอจิกทางธุรกิจ (Business Rules) ตรวจสอบความถูกต้อง
-- เรียกใช้ Repository เพื่อติดต่อกับฐานข้อมูล (ถ้าเกี่ยวกับการเก็บข้อมูล) หรือติดต่อไปที่ External APIs
-- ปกติจะถูกประกาศให้ใช้งานได้ด้วย Decorator `@Injectable()` ซึ่งแปลว่าพร้อมให้แพ็คเกจ NestJS นำไปเสียบ (Inject) ที่อื่นๆ (เช่น ใน Controller)
+**แนวคิดหลักของ Provider:**
+- หัวใจสำคัญคือ **"มันสามารถถูกฉีดเข้าไปเป็น Dependency ได้ (Injected as a dependency)"**
+- นั่นหมายความว่า Object หรือคลาสต่างๆ สามารถสร้างความสัมพันธ์โยงใยเข้าหากันได้ และเราสามารถโยนหน้าที่การเชื่อมโยง Object เหล่านี้เข้าด้วยกัน ("Wiring up") ให้เป็นหน้าที่ของระบบรันไทม์ (Runtime system) ของ NestJS เป็นคนจัดการให้แบบอัตโนมัติ (ผ่านกลไกที่เรียกว่า Dependency Injection หรือ DI)
 
-**ตัวอย่างโค้ด:**
+โดยปกติ Provider จะถูกประกาศบอก NestJS ไว้ด้วย **Decorator `@Injectable()`** เพื่อบอกว่า "คลาสนี้พร้อมถูกนำไปเสียบ (Inject) ใช้งานในคลาสอื่น (เช่น ใน Controller หรือใน Provider อื่นๆ) แล้ว"
+
+> **Service** คือตัวอย่างที่ชัดเจนและถูกใช้งานบ่อยที่สุดของ Provider มีหน้าที่จดการกับลอจิก กฎเกณฑ์การประมวลผล (Business Logic) ของแอปพลิเคชัน แยกออกจาก Controller เพื่อให้โค้ดสะอาด และสามารถเรียกใช้ซ้ำๆ (Reusable) ได้
+
+**ตัวอย่างโค้ด Service (ซึ่งเป็น Provider ชนิดหนึ่ง):**
 ```typescript
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CustomerRepository } from './customer.repository';
