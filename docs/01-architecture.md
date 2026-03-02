@@ -239,6 +239,153 @@ export class CustomerRepository {
 
 ---
 
+## 1.4 Root-Level Files: app.module.ts, app.controller.ts, app.service.ts
+
+เมื่อโปรเจกต์โตขึ้นและแยกฟีเจอร์ต่างๆ ออกไปไว้ใน `src/modules/` หมดแล้ว หน้าที่ของไฟล์ 3 ตัวที่อยู่ระดับ Root จะเปลี่ยนไปจากตอนเริ่มต้นโปรเจกต์ครับ
+
+ลองนึกภาพว่าโปรเจกต์ของคุณคือ **"บริษัท"** — โฟลเดอร์ย่อยๆ ใน `modules/` คือ **"แผนกต่างๆ"** (ฝ่ายขาย, ฝ่ายบุคคล) ส่วนไฟล์ App ทั้ง 3 ตัวคือ **"สำนักงานใหญ่ (Headquarters)"** ครับ
+
+---
+
+### 🏢 app.module.ts — ต้องมีเสมอ (Root Module)
+
+**หน้าที่หลัก:** เป็นจุดเริ่มต้น (Entry Point) เพียงหนึ่งเดียวที่ NestJS จะมองหาตอนเริ่มรันแอปพลิเคชัน ผ่านคำสั่ง `NestFactory.create(AppModule)` ใน `main.ts`
+
+**ทำอะไรบ้าง:** รวบรวมทุก Module ของทุกแผนก, ระบบฐานข้อมูล, ระบบ Config และตั้งค่า Global Guards/Middlewares
+
+> **สรุป:** ถ้าไม่มีตัวนี้ แอปจะรันไม่ขึ้นเลย
+
+**ตัวอย่างโค้ด:**
+```typescript
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+
+@Module({
+  imports: [
+    // Global Config
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    // Database
+    PrismaModule,
+
+    // Feature Modules
+    AuthModule,
+    CustomerModule,
+    EmployeeModule,
+    ProductModule,
+
+    // Health Check
+    HealthModule,
+  ],
+  providers: [
+    // Global Guards
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+
+    // Global Interceptors
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: TransformResponseInterceptor },
+
+    // Global Filters
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+  ],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CorrelationIdMiddleware, LoggerMiddleware)
+      .forRoutes('*');
+  }
+}
+```
+
+---
+
+### 🛎️ app.controller.ts — มีหรือไม่มีก็ได้ (Root Controller)
+
+**หน้าที่หลัก:** รับ Request ที่เข้ามาที่ Root URL โดยตรง เช่น `GET http://localhost:3000/`
+
+**ทำอะไรบ้าง (ในโปรเจกต์จริง):** ส่วนใหญ่ใช้ทำ Health Check ง่ายๆ เพื่อให้ระบบ Monitoring (เช่น AWS, Docker) รู้ว่าเซิร์ฟเวอร์ยังทำงานอยู่
+
+> **สรุป:** ไม่มี Business Logic สำคัญใดๆ ถ้าสร้าง `HealthModule` แยกต่างหากแล้ว สามารถลบไฟล์นี้ทิ้งได้เลย
+
+**ตัวอย่างโค้ด:**
+```typescript
+import { Controller, Get } from '@nestjs/common';
+
+@Controller()
+export class AppController {
+  @Get()
+  getRoot() {
+    return {
+      name: 'My API',
+      version: '1.0.0',
+      status: 'running',
+    };
+  }
+}
+```
+
+เปรียบเทียบ Route ของแต่ละ Controller เมื่อโปรเจกต์โตขึ้น:
+```
+GET /           →  app.controller.ts       ← ลบได้ถ้ามี HealthModule แล้ว
+GET /health     →  health.controller.ts    ← ทำหน้าที่แทนได้
+GET /customers  →  customer.controller.ts
+GET /products   →  product.controller.ts
+```
+
+---
+
+### ⚙️ app.service.ts — มีหรือไม่มีก็ได้ (Root Service)
+
+**หน้าที่หลัก:** เขียน Logic พื้นฐานเพื่อส่งข้อมูลให้ `app.controller.ts`
+
+**ทำอะไรบ้าง:** มักจะมีแค่ฟังก์ชัน boilerplate ที่ติดมาตอนสร้างโปรเจกต์ด้วย NestJS CLI
+
+> **สรุป:** เมื่อโปรเจกต์มี Feature Modules ครบแล้ว ไฟล์นี้จะไม่มีประโยชน์ ควรลบทิ้งเพื่อให้โค้ดสะอาดขึ้น
+
+```typescript
+@Injectable()
+export class AppService {
+  // ฟังก์ชัน boilerplate ที่ NestJS CLI สร้างมาให้ตอน nest new project
+  // ใน production แทบไม่มีใครใช้ เพราะ business logic ทุกอย่างอยู่ใน feature modules
+  getHello(): string {
+    return 'Hello World!';
+  }
+}
+```
+
+---
+
+### 📋 สรุป: เก็บหรือลบ?
+
+| File | สถานะ | เหตุผล |
+|---|---|---|
+| `app.module.ts` | ✅ เก็บเสมอ | Root Module — NestJS ต้องใช้บังคับ |
+| `app.controller.ts` | ⚠️ มีหรือไม่มีก็ได้ | ใช้แค่ `GET /` root route หรือลบถ้ามี HealthModule แล้ว |
+| `app.service.ts` | ❌ ลบได้เลย | แทบไม่มีประโยชน์ใน production |
+
+**โครงสร้างที่แนะนำสำหรับโปรเจกต์จริง:**
+```
+src/
+├── main.ts                    # Entry point
+├── app.module.ts              # ✅ Root Module (ต้องมีเสมอ)
+│
+├── database/                  # Prisma / TypeORM config
+├── common/                    # Global Guards, Filters, Interceptors
+├── shared/                    # Cache, Logger, Queue
+├── modules/                   # Feature Modules
+│   ├── auth/
+│   ├── customer/
+│   ├── employee/
+│   ├── product/
+│   └── health/                # ← ทำหน้าที่แทน app.controller ได้
+└── jobs/                      # Background jobs
+```
+
+---
+
 ## 📌 สรุป Flow การทำงานร่วมกันของทั้ง 4 ส่วน
 การไหลของข้อมูลเวลามีคนใช้งานแอปพลิเคชันของคุณจะมีลำดับดังนี้:
 1. `Client` (ส่ง Request) ➡ **Controller** (รับ Request + ดึงค่า + สั่งงานต่อ)

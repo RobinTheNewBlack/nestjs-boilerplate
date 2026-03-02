@@ -2,7 +2,6 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from '@/app.controller';
-import { AppService } from '@/app.service';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { ProductModule } from './modules/product/product.module';
@@ -39,8 +38,7 @@ import { CustomerModule } from './modules/customers/customer.module';
   ],
   controllers: [AppController],
   providers: [
-    AppService,
-    // Apply ทุก route อัตโนมัติ
+    // Global Rate Limiting
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
