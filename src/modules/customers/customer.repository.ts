@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/database/prisma/prisma.service';
 import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
-import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 
 @Injectable()
 export class CustomerRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(data: CreateCustomerDto) {
     return await this.prisma.customer.create({
@@ -14,26 +13,26 @@ export class CustomerRepository {
     });
   }
 
-  async findAll(query: QueryCustomerDto) {
+  async findAll(query: any) {
     return await this.prisma.customer.findMany({ where: query });
   }
 
-  async findById(id: number) {
+  async findById(uuid: string) {
     return await this.prisma.customer.findUnique({
-      where: { id },
+      where: { uuid },
     });
   }
 
-  async update(id: number, data: UpdateCustomerDto) {
+  async update(uuid: string, data: UpdateCustomerDto) {
     return await this.prisma.customer.update({
-      where: { id },
+      where: { uuid },
       data,
     });
   }
 
-  async delete(id: number) {
+  async delete(uuid: string) {
     return await this.prisma.customer.delete({
-      where: { id },
+      where: { uuid },
     });
   }
 }

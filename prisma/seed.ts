@@ -5,7 +5,10 @@ const prisma = new PrismaClient();
 async function main() {
     await prisma.customer.create({
         data: {
-            name: 'John Doe',
+            first_name: 'John',
+            last_name: 'Doe',
+            customer_code: 'C001',
+            customer_type: 'RETAIL',
             email: 'john.doe@example.com',
             phone: '0800000000',
         },

@@ -6,19 +6,141 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CustomerTypeEnum {
+  RETAIL
+  WHOLESALE
+}
+
+enum EmployeePositionEnum {
+  MANAGER
+  CASHIER
+  SALES
+}
+
+enum ProductCategoryEnum {
+  ELECTRONICS
+  CLOTHING
+  FOOD
+  OTHER
+}
+
+enum PaymentMethodEnum {
+  CASH
+  CREDIT_CARD
+  TRANSFER
+}
+
+enum PaymentStatusEnum {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum TransactionStatusEnum {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
 model Customer {
-  id        Int      @id @default(autoincrement())
-  firstName String
-  lastName  String
-  email     String   @unique
-  phone     String?
-  address   String?
-  city      String?
-  state     String?
-  zipCode   String?
-  country   String?
-  company   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  uuid          String           @id @default(uuid())
+  customer_code String           @unique
+  first_name    String
+  last_name     String
+  phone         String?
+  email         String?          @unique
+  address       String?
+  city          String?
+  postal_code   String?
+  customer_type CustomerTypeEnum
+  is_active     Boolean          @default(true)
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
+  deleted_at    DateTime?
+
+  sales         SalesTransaction[] @relation("CustomerSales")
+}
+
+model Employee {
+  uuid          String               @id @default(uuid())
+  employee_code String               @unique
+  first_name    String
+  last_name     String
+  position      EmployeePositionEnum
+  phone         String?
+  email         String?              @unique
+  hire_date     DateTime
+  is_active     Boolean              @default(true)
+  created_at    DateTime             @default(now())
+  updated_at    DateTime             @updatedAt
+  deleted_at    DateTime?
+
+  sales         SalesTransaction[] @relation("EmployeeSales")
+}
+
+model Inventory {
+  uuid           String   @id @default(uuid())
+  product_uuid   String
+  warehouse_name String
+  quantity       Int
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  deleted_at     DateTime?
+
+  product        Product  @relation("ProductInventory", fields: [product_uuid], references: [uuid])
+}
+
+model Product {
+  uuid          String              @id @default(uuid())
+  product_code  String              @unique
+  product_name  String
+  category      ProductCategoryEnum
+  cost_price    Float
+  selling_price Float
+  is_active     Boolean             @default(true)
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+  deleted_at    DateTime?
+
+  inventory     Inventory[]              @relation("ProductInventory")
+  sales_items   SalesTransactionItem[]   @relation("ProductSalesItems")
+}
+
+model SalesTransaction {
+  uuid            String                @id @default(uuid())
+  sale_date       DateTime
+  customer_uuid   String
+  employee_uuid   String
+  subtotal        Float
+  tax_amount      Float
+  discount_amount Float
+  total_amount    Float
+  payment_method  PaymentMethodEnum
+  payment_status  PaymentStatusEnum
+  due_date        DateTime?
+  status          TransactionStatusEnum
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  deleted_at      DateTime?
+
+  customer        Customer               @relation("CustomerSales", fields: [customer_uuid], references: [uuid])
+  employee        Employee               @relation("EmployeeSales", fields: [employee_uuid], references: [uuid])
+  items           SalesTransactionItem[] @relation("SaleItems")
+}
+
+model SalesTransactionItem {
+  uuid            String   @id @default(uuid())
+  sale_uuid       String
+  product_uuid    String
+  quantity        Int
+  unit_price      Float
+  discount_amount Float
+  subtotal        Float
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  deleted_at      DateTime?
+
+  transaction     SalesTransaction @relation("SaleItems", fields: [sale_uuid], references: [uuid])
+  product         Product          @relation("ProductSalesItems", fields: [product_uuid], references: [uuid])
 }

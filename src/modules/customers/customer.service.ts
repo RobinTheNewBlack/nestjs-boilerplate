@@ -6,44 +6,43 @@ import {
 import { CustomerRepository } from '@/modules/customers/customer.repository';
 import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
-import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 
 @Injectable()
 export class CustomerService {
   constructor(private readonly customerRepository: CustomerRepository) { }
 
   async createCustomer(data: CreateCustomerDto) {
-    if (!data.firstName || !data.lastName) {
+    if (!data.first_name || !data.last_name) {
       throw new BadRequestException('ชื่อและนามสกุลไม่สามารถเป็นค่าว่างได้');
     }
     return await this.customerRepository.create(data);
   }
 
-  async getAllCustomers(query) {
+  async getAllCustomers(query: any) {
     return await this.customerRepository.findAll(query);
   }
 
-  async getCustomerById(id: number) {
-    const customer = await this.customerRepository.findById(id);
+  async getCustomerById(uuid: string) {
+    const customer = await this.customerRepository.findById(uuid);
     if (!customer) {
-      throw new NotFoundException(`ไม่พบลูกค้า ID: ${id}`);
+      throw new NotFoundException(`ไม่พบลูกค้า ID: ${uuid}`);
     }
     return customer;
   }
 
-  async updateCustomer(id: number, data: UpdateCustomerDto) {
-    const customer = await this.getCustomerById(id);
+  async updateCustomer(uuid: string, data: UpdateCustomerDto) {
+    const customer = await this.getCustomerById(uuid);
     if (!customer) {
-      throw new NotFoundException(`ไม่พบลูกค้า ID: ${id}`);
+      throw new NotFoundException(`ไม่พบลูกค้า ID: ${uuid}`);
     }
-    return await this.customerRepository.update(id, data);
+    return await this.customerRepository.update(uuid, data);
   }
 
-  async deleteCustomer(id: number) {
-    const customer = await this.getCustomerById(id);
+  async deleteCustomer(uuid: string) {
+    const customer = await this.getCustomerById(uuid);
     if (!customer) {
-      throw new NotFoundException(`ไม่พบลูกค้า ID: ${id}`);
+      throw new NotFoundException(`ไม่พบลูกค้า ID: ${uuid}`);
     }
-    return await this.customerRepository.delete(id);
+    return await this.customerRepository.delete(uuid);
   }
 }
