@@ -13,6 +13,7 @@ import {
 import { CustomerService } from '@/modules/customers/customer.service';
 import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
+import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 
 @Controller('customers')
 export class CustomerController {
@@ -30,7 +31,7 @@ export class CustomerController {
   }
 
   @Get()
-  findAll(@Query() query: any) {
+  findAll(@Query() query: QueryCustomerDto) {
     return this.customerService.getAllCustomers(query);
   }
 

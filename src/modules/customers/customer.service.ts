@@ -6,6 +6,7 @@ import {
 import { CustomerRepository } from '@/modules/customers/customer.repository';
 import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
+import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 
 @Injectable()
 export class CustomerService {
@@ -18,7 +19,7 @@ export class CustomerService {
     return await this.customerRepository.create(data);
   }
 
-  async getAllCustomers(query: any) {
+  async getAllCustomers(query: QueryCustomerDto) {
     return await this.customerRepository.findAll(query);
   }
 

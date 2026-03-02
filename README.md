@@ -707,3 +707,193 @@ export class UserController {
 14. **`HttpVersionNotSupportedException` (HTTP 505)**
     - **คืออะไร / ใช้ตอนไหน:** เมื่อ Protocol HTTP Version ของ Client เก่าหรือประหลาดเกินไป จนต้อนรับทำงานด้วยกันไม่ได้ (พบเจอน้อยมาก)
     - **ตัวอย่าง:** Web Server ปรับแต่งตั้งค่าให้รองรับ HTTP/2.0 ขึ้นไปเท่านั้น แต่ดันมี Client เครื่องรุ่นเก่ายิงต่อด้วย HTTP/1.0
+
+---
+
+## 8. โครงสร้างและประโยชน์ของโฟลเดอร์ `src/common` (Shared Toolbox)
+
+โฟลเดอร์ `/common` เปรียบเสมือน **"กล่องเครื่องมือส่วนกลาง"** ของโปรเจกต์ โค้ดใดๆ ก็ตามที่ถูกเรียกใช้งานซ้ำๆ จากหลายๆ Module (เช่น `UserModule`, `ProductModule`) จะถูกนำมารวมไว้ที่นี่ เพื่อให้ง่ายต่อการเรียกใช้ ไม่ซ้ำซ้อน (ตามหลัก DRY - Don't Repeat Yourself) และช่วยสร้างมาตรฐานเดียวกันทั้งแอปพลิเคชัน
+
+### 📂 ภาพรวมโฟลเดอร์ย่อยใน `/common`
+
+- **`constants/`**: เก็บตัวแปรค่าคงที่ (Constant Variables) เช่น ชื่อ HTTP Headers, ตัวเลข Configuration
+- **`decorators/`**: เก็บ Custom Decorator ที่สร้างขึ้นมาใช้เอง (เช่น `@CurrentUser()`)
+- **`enums/`**: เก็บ TypeScript Enums เพื่อใช้กำหนดชุดค่าคงที่ที่มีข้อจำกัด (เช่น สถานะการชำระเงิน `PaymentStatus`)
+- **`filters/`**: เก็บ Exception Filters สำหรับดักจับ Error และจัดรูปแบบ Error Message ให้เป็นมาตรฐานก่อนส่งกลับไปที่ Frontend
+- **`guards/`**: เก็บ Guards ที่ทำหน้าที่เหมือนทหารยาม คอยเช็คสิทธิ์ (เช่น ตรวจสอบ JWT Token หรือเช็ค Role)
+- **`interceptors/`**: เก็บ Interceptors สำหรับดักจับ Request ขาเข้า หรือจัดรูปแบบ Response ขาออก (เช่น ห่อข้อมูลด้วย `{ success: true, data: ... }`)
+- **`interfaces/`**: กำหนดโครงสร้างข้อมูล (Type/Interface) ที่ใช้ร่วมกัน
+- **`middleware/`**: ด่านแรกสุดที่รับ Request (ระดับ Express.js) เช่น Middleware สำหรับจัดการ Request ID
+- **`utils/`**: เก็บฟังก์ชันตัวช่วย (Helper functions) ทั่วไป เช่น ฟังก์ชันสุ่มรหัสผ่าน, ตัวช่วยคำนวณวันหมดอายุ
+
+---
+
+### 🕵️‍♂️ เจาะลึกไฟล์สำคัญใน `/common` พร้อมตัวอย่างโค้ด
+
+#### 1. 🛡️ `guards/jwt-auth.guard.ts` (ทหารยามเช็คสิทธิ์)
+**หน้าที่:** ปกป้อง API ไม่ให้คนที่ไม่ได้ Login เข้ามาใช้งาน Guard จะชาร์จตัว Request และตรวจเช็คกุญแจ (Token) ก่อนส่งต่อไปยัง Controller
+
+```typescript
+// src/common/guards/jwt-auth.guard.ts
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  canActivate(context: ExecutionContext) {
+    // สามารถแทรก Logic เพิ่มเติมตรงนี้ได้
+    return super.canActivate(context);
+  }
+
+  handleRequest(err, user, info) {
+    if (err || !user) {
+      throw err || new UnauthorizedException('กรุณาเข้าสู่ระบบก่อนใช้งาน');
+    }
+    return user; // เมื่อผ่าน user จะถูกแปะเข้าไปใน req.user อัตโนมัติ
+  }
+}
+```
+
+#### 2. 🧹 `filters/http-exception.filter.ts` (แผนกจัดรูปแบบ Error)
+**หน้าที่:** ดักจับ Error ที่เกิดขึ้นในระบบแล้วจัด Format ให้เป็นรูปแบบ (`JSON`) แบบเดียวกันทั้งหมด ทำให้ Frontend นำไปแสดงผลหรือจัดการต่อได้ง่าย
+
+```typescript
+// src/common/filters/http-exception.filter.ts
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { Request, Response } from 'express';
+
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    const status = exception.getStatus();
+    const exceptionResponse = exception.getResponse();
+
+    // จัด Format Error ให้ดูเป็นระดับมืออาชีพ
+    response.status(status).json({
+      success: false,
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      correlationId: request['correlationId'], // ดึง Correlation ID มาตรวจสอบได้เลย
+      message: typeof exceptionResponse === 'string' ? exceptionResponse : (exceptionResponse as any).message,
+    });
+  }
+}
+```
+
+#### 3. 🎁 `interceptors/transform-response.interceptor.ts` (ตัวจัดรูปแบบ Response)
+**หน้าที่:** ดักจับค่าที่ Controller ส่งกลับมา เพื่อนำมาจัดรูปแบบใหม่อีกครั้งให้เป็นมาตรฐานเดียวกันก่อนส่งกลับไปยัง Client
+
+```typescript
+// src/common/interceptors/transform-response.interceptor.ts
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+export interface Response<T> {
+  success: boolean;
+  data: T;
+}
+
+@Injectable()
+export class TransformResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
+    return next.handle().pipe(
+      map(data => ({
+        success: true,
+        data: data, // ห่อข้อมูลทั้งหมดไว้ใน key ว่า `data`
+      })),
+    );
+  }
+}
+```
+
+#### 4. 🔗 `middleware/correlation-id.middleware.ts` (ตัวสร้าง Tracking ID)
+**หน้าที่:** เปรียบเสมือนการแปะ "บัตรคิว" หรือ "Tracking Number" ไปกับทุก Request ช่วยให้เวลาเราค้นประวัติ Log บน Production สามารถแกะรอยการทำงานของ Request นั้นๆ ได้ตั้งแต่ต้นจนจบ
+
+```typescript
+// src/common/middleware/correlation-id.middleware.ts
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+import { randomUUID } from 'crypto';
+
+@Injectable()
+export class CorrelationIdMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    // 1. ตรวจสอบ Header เผื่อมี Correlation ID แนบมาจาก Service อื่น
+    const correlationHeader = req.headers['x-correlation-id'];
+    
+    // 2. ถ้าไม่มี ให้สุ่ม UUID ใหม่
+    const correlationId = correlationHeader || randomUUID();
+
+    // 3. ฝังลงใน Request เพื่อให้ส่วนอื่นของระบบดึงไปใช้ (เช่น ไปใส่ใน Log)
+    req['correlationId'] = correlationId;
+    
+    // (ทางเลือก) แนบกลับไปใน Response ด้วย
+    res.setHeader('x-correlation-id', correlationId);
+
+    // 4. ไปยังด่านต่อไป
+    next();
+  }
+}
+```
+
+#### 5. 📝 `middleware/logger.middleware.ts` (นักจดบันทึกการเข้า-ออก)
+**หน้าที่:** ดักจับและจดบันทึกข้อมูลทุกๆ Request ที่วิ่งเข้ามา และ Response ที่ถูกส่งกลับออกไป มีประโยชน์มากในการใช้เฝ้าระวังระบบ (Monitoring) ทำให้เรารู้ว่าใครเรียก API ไหนบ้าง ใช้เวลาประมวลผลไปกี่มิลลิวินาที (ms) และผลลัพธ์คือสำเร็จหรือพัง
+
+```typescript
+// src/common/middleware/logger.middleware.ts
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+
+@Injectable()
+export class LoggerMiddleware implements NestMiddleware {
+    // สร้างตัวแปร logger โดยระบุ Context ว่า 'HTTP' เพื่อให้จัดกลุ่ม Log ได้ง่าย
+    private logger = new Logger('HTTP');
+
+    use(req: Request, res: Response, next: NextFunction) {
+        // 1. เก็บข้อมูลตอนที่ Request เพิ่งเข้ามาถึง
+        const { method, originalUrl, ip } = req;
+        const userAgent = req.get('user-agent') || '';
+        const startTime = Date.now(); // จับเวลาเริ่มต้น
+
+        // 2. ดักจับ Event 'finish' ซึ่งจะทำงานเมื่อ Response ถูกส่งกลับไปหา Client เสร็จสิ้นแล้ว
+        res.on('finish', () => {
+            const { statusCode } = res;
+            const contentLength = res.get('content-length') || 0;
+            const responseTime = Date.now() - startTime; // คำนวณเวลาที่ใช้ไปทั้งหมด
+
+            // ดึง Correlation ID ที่ได้จาก correlation-id.middleware.ts (ถ้ามี)
+            const correlationId = req['correlationId'] || '-';
+
+            // 3. พิมพ์ Log ออกมาทาง Console หรือส่งเข้าไฟล์
+            // รูปแบบ: [CorrelationID] GET /api/v1/users 200 120b - PostmanRuntime/7.29.2 ::1 - 15ms
+            this.logger.log(
+                `[${correlationId}] ${method} ${originalUrl} ${statusCode} ${contentLength}b - ${userAgent} ${ip} - ${responseTime}ms`
+            );
+        });
+
+        // 4. ให้ระบบทำงานต่อไป (วิ่งเข้าหา Controller)
+        next();
+    }
+}
+```
+
+#### 6. 🏷️ `enums/payment-status.enum.ts` (ศูนย์รวมค่าคงที่)
+**หน้าที่:** กำหนดค่าที่เป็นไปได้ทั้งหมดให้กับตัวแปรหนึ่งๆ ป้องกันความผิดพลาดจากการพิมพ์ (Typo Error)
+
+```typescript
+// src/common/enums/payment-status.enum.ts
+export enum PaymentStatus {
+  PENDING = 'PENDING',       // รอดำเนินการ
+  PROCESSING = 'PROCESSING', // กำลังประมวลผล
+  SUCCESS = 'SUCCESS',       // สำเร็จ
+  FAILED = 'FAILED',         // ล้มเหลว
+  REFUNDED = 'REFUNDED'      // คืนเงินแล้ว
+}
+```
+
+สรุปคือ โฟลเดอร์ `/common` เป็นพื้นที่ที่จะช่วยให้โค้ดของคุณ **มีมาตรฐานเดียวกันหมด** หากมีเครื่องมือส่วนกลางที่สร้างขึ้นมาอย่างดี จะช่วยให้ทั้งทีมเขียนโค้ดได้กระชับขึ้นและดูแลรักษาระบบได้ง่ายขึ้นในระยะยาว!
