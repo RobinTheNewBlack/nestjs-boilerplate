@@ -26,16 +26,19 @@ export class CustomerController {
   }
 
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
     return this.customerService.getCustomerById(id);
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   findAll(@Query() query: QueryCustomerDto) {
     return this.customerService.getAllCustomers(query);
   }
 
   @Put(':id')
+  @HttpCode(HttpStatus.OK)
   update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto) {
     return this.customerService.updateCustomer(id, updateCustomerDto);
   }
