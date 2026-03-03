@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@/app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
 import compression from 'compression';
 import helmet from 'helmet';
 
@@ -17,9 +18,16 @@ async function bootstrap() {
 
   // ── Global Pipe ──
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // ตัดฟิลด์ขยะที่ไม่ได้กำหนดไว้ใน DTO ทิ้งอัตโนมัติ
+    whitelist: true,            // ตัดฟิลด์ขยะที่ไม่ได้กำหนดไว้ใน DTO ทิ้งอัตโนมัติ
     forbidNonWhitelisted: true, // ถ้ามีฟิลด์ขยะโผล่มา ให้ Throw Error ทันที
-    transform: true, // แปลง Payload ให้เป็น Instance ของ DTO Class
+    transform: true,            // แปลง Payload ให้เป็น Instance ของ DTO Class
+    exceptionFactory: (validationErrors: ValidationError[]) => {
+      const errors = validationErrors.map((err) => ({
+        field: err.property,
+        message: Object.values(err.constraints ?? {})[0],
+      }));
+      return new BadRequestException({ message: 'Validation failed', errors });
+    },
   }));
 
   // ── Global Prefix ──

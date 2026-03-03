@@ -49,6 +49,66 @@ export class CustomerController {
 }
 ```
 
+**3. ปรับแต่งรูปแบบ Error Response ด้วย `exceptionFactory` (Official NestJS Practice)**
+
+โดย Default เมื่อ `ValidationPipe` ตรวจพบข้อผิดพลาด มันจะโยน Error ออกมาในรูปแบบนี้:
+```json
+{
+  "statusCode": 400,
+  "message": ["email must be an email", "name should not be empty"],
+  "error": "Bad Request"
+}
+```
+สังเกตว่า `message` เป็นแค่ Array ของ String ธรรมดา ไม่มีการบอกว่าแต่ละข้อความเป็น Error ของ **field ไหน** เลย ทำให้ฝั่ง Client นำไปแสดงผลได้ยาก
+
+`exceptionFactory` คือ Option ที่ NestJS เปิดให้อย่างเป็นทางการ เพื่อให้เราเข้าไปปรับแต่งรูปแบบของ Error ก่อนที่มันจะถูกโยนออกไปได้เลย โดย `ValidationPipe` จะส่ง Array ของ `ValidationError` (จาก `class-validator`) เข้ามาให้เราจัดการเอง:
+
+```typescript
+// src/main.ts
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
+
+app.useGlobalPipes(new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  transform: true,
+  exceptionFactory: (validationErrors: ValidationError[]) => {
+    // ValidationError แต่ละตัวมีหน้าตาแบบนี้ภายใน:
+    // {
+    //   property: 'email',           ← ชื่อ field ที่ผิด
+    //   constraints: {
+    //     isEmail: 'email must be an email',   ← กฎที่ fail พร้อม message
+    //     isNotEmpty: 'email should not be empty',
+    //   }
+    // }
+
+    const errors = validationErrors.map((err) => ({
+      field: err.property,                               // ดึงชื่อ field ที่ผิด
+      message: Object.values(err.constraints ?? {})[0], // ดึง message ของกฎแรกที่ fail
+    }));
+
+    return new BadRequestException({ message: 'Validation failed', errors });
+  },
+}));
+```
+
+ผลที่ได้คือ Error Response จะมีข้อมูลครบถ้วนกว่าเดิมมาก:
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": [
+    { "field": "email",  "message": "email must be an email" },
+    { "field": "name",   "message": "name should not be empty" }
+  ]
+}
+```
+
+> **💡 Note:** `exceptionFactory` เป็น Option ที่อยู่ใน Official NestJS Documentation ไม่ใช่ workaround หรือ hack ใดๆ ทั้งสิ้น รูปแบบ `{ field, message }` ที่เห็นนั้นเป็นการออกแบบของเราเอง (Team Convention) แต่กลไกที่ใช้ทำมันเป็นของ NestJS โดยตรง
+
+---
+
 ### 🏷️ 2.2 Validation Decorator แต่ละตัวคืออะไร?
 
 ในไฟล์จำพวก DTO เราจะนำ Decorators จากไลบรารี `class-validator` มาแปะไว้เหนือกำกับตัวแปรต่างๆ ของเรา ตัวแปรไหนจะโดนประเมินอย่างไรบ้างก็ขึ้นอยู่กับสิ่งที่เราเลือกใช้:

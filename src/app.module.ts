@@ -1,7 +1,8 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from '@/app.controller';
+import { CustomerModule } from './modules/customers/customer.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { ProductModule } from './modules/product/product.module';
@@ -9,8 +10,12 @@ import { SalesTransactionModule } from './modules/sales-transaction/sales-transa
 import { SalesTransactionItemModule } from './modules/sales-transaction-item/sales-transaction-item.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { CustomerModule } from './modules/customers/customer.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
+import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 @Module({
   imports: [
@@ -40,10 +45,31 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
   ],
   controllers: [AppController],
   providers: [
+    // Global Filters — ลงทะเบียนจาก broad → specific (last-in, first-run)
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,   // fallback: รันสุดท้าย
+    },
+    {
+      provide: APP_FILTER,
+      useClass: PrismaExceptionFilter, // Prisma errors
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,   // HTTP errors: รันก่อน
+    },
     // Global Interceptors
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformResponseInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TimeoutInterceptor,
     },
     // Global Rate Limiting
     {

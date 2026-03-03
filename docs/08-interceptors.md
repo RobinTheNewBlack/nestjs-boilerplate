@@ -186,25 +186,231 @@ export class LoggingInterceptor implements NestInterceptor {
 
 ```typescript
 // src/common/interceptors/transform-response.interceptor.ts
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+    Injectable,
+    NestInterceptor,
+    ExecutionContext,
+    CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Request, Response } from 'express';
 
-export interface Response<T> {
-  success: boolean;
-  data: T;
+export interface ApiResponse<T> {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: T;
 }
 
 @Injectable()
-export class TransformResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
-    return next.handle().pipe(
-      map(data => ({
-        success: true,
-        data: data, // ห่อข้อมูลทั้งหมดไว้ใน key ว่า `data`
-      })),
-    );
-  }
+export class TransformResponseInterceptor<T>
+    implements NestInterceptor<T, ApiResponse<T> | void>
+{
+    intercept(
+        context: ExecutionContext,
+        next: CallHandler<T>,
+    ): Observable<ApiResponse<T> | void> {
+        const http = context.switchToHttp();
+        const request = http.getRequest<Request>();
+        const response = http.getResponse<Response>();
+
+        return next.handle().pipe(
+            map((data) => {
+                // 204 No Content — ไม่ต้อง wrap body
+                if (response.statusCode === 204 || data === undefined || data === null) {
+                    return;
+                }
+
+                return {
+                    success: true,
+                    statusCode: response.statusCode,
+                    message: this.resolveMessage(request.method, response.statusCode),
+                    data,
+                };
+            }),
+        );
+    }
+
+    private resolveMessage(method: string, statusCode: number): string {
+        if (statusCode === 201) return 'Created successfully';
+
+        switch (method.toUpperCase()) {
+            case 'GET':    return 'Fetched successfully';
+            case 'POST':   return 'Created successfully';
+            case 'PUT':
+            case 'PATCH':  return 'Updated successfully';
+            case 'DELETE': return 'Deleted successfully';
+            default:       return 'Success';
+        }
+    }
+}
+```
+
+#### สิ่งที่โค้ดนี้ทำ
+
+**`ApiResponse<T>` interface — รูปแบบ Response มาตรฐาน:**
+
+```typescript
+{
+  success: true,
+  statusCode: 200,
+  message: "Fetched successfully",
+  data: { ... }  // ข้อมูลจริงที่ Controller ส่งมา
+}
+```
+
+ทุก response ที่สำเร็จจะถูกห่อด้วย shape นี้เสมอ ทำให้ Client ไม่ต้องเดาว่า API แต่ละตัวส่งข้อมูลมาในรูปแบบไหน
+
+**`intercept()` — ดึง Request และ Response จาก context:**
+
+ต่างจาก `LoggingInterceptor` ที่ดึงเฉพาะ `request` ตัวนี้ดึงทั้ง `request` และ `response` เพราะต้องการ **status code จริงที่ Express กำหนดไว้** (เช่น 200, 201) และ **HTTP method** เพื่อสร้าง message ที่เหมาะสม
+
+**`map((data) => ...)` — แปลง Response ขาออก:**
+
+`map` ใน RxJS คือตัวแปลงค่าที่ออกมาจาก stream — ทำงานเหมือน `Array.map()` แต่กับ Observable แทน
+
+| เงื่อนไข | สิ่งที่เกิดขึ้น |
+|---|---|
+| `statusCode === 204` | return `undefined` — ไม่ห่อ body เพราะ 204 No Content ไม่ควรมี body |
+| `data === undefined \|\| null` | return `undefined` — เช่นเดียวกัน ป้องกัน body ว่างถูกห่อโดยไม่จำเป็น |
+| กรณีอื่นทั้งหมด | ห่อข้อมูลด้วย `ApiResponse<T>` shape |
+
+**`resolveMessage()` — สร้าง message อัตโนมัติตาม HTTP method:**
+
+| เงื่อนไข | message |
+|---|---|
+| `statusCode === 201` | `"Created successfully"` (ตรวจ status code ก่อน method เพราะ POST บางครั้งอาจคืน 200) |
+| `GET` | `"Fetched successfully"` |
+| `POST` | `"Created successfully"` |
+| `PUT` / `PATCH` | `"Updated successfully"` |
+| `DELETE` | `"Deleted successfully"` |
+| อื่นๆ | `"Success"` |
+
+#### ตัวอย่าง output ที่จะเห็น
+
+**GET /users/1 → 200:**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Fetched successfully",
+  "data": { "id": 1, "name": "Alice" }
+}
+```
+
+**POST /users → 201:**
+```json
+{
+  "success": true,
+  "statusCode": 201,
+  "message": "Created successfully",
+  "data": { "id": 2, "name": "Bob" }
+}
+```
+
+**DELETE /users/1 → 204:**
+```
+(no body)
+```
+
+---
+
+### ⏱️ `interceptors/timeout.interceptor.ts` (ทำงานขาออก)
+
+**หน้าที่:** จำกัดเวลาที่แต่ละ Request อนุญาตให้ใช้ได้ — ถ้า Controller (หรือ Service) ใช้เวลาเกินกำหนด จะโยน `RequestTimeoutException` (HTTP 408) ทันที แทนที่จะรอค้างไว้ตลอดไป
+
+```typescript
+// src/common/interceptors/timeout.interceptor.ts
+import {
+    Injectable,
+    NestInterceptor,
+    ExecutionContext,
+    CallHandler,
+    RequestTimeoutException,
+} from '@nestjs/common';
+import { Observable, throwError, TimeoutError } from 'rxjs';
+import { timeout, catchError } from 'rxjs/operators';
+
+@Injectable()
+export class TimeoutInterceptor implements NestInterceptor {
+    constructor(private readonly ms: number = 5000) { }
+
+    intercept(_context: ExecutionContext, next: CallHandler): Observable<any> {
+        return next.handle().pipe(
+            timeout(this.ms),
+            catchError((err) => {
+                if (err instanceof TimeoutError) {
+                    return throwError(() => new RequestTimeoutException(
+                        `Request timed out after ${this.ms}ms`,
+                    ));
+                }
+                return throwError(() => err);
+            }),
+        );
+    }
+}
+```
+
+#### สิ่งที่โค้ดนี้ทำ
+
+**Constructor รับ `ms` — กำหนด timeout แบบยืดหยุ่น:**
+
+```typescript
+constructor(private readonly ms: number = 5000) { }
+```
+
+ค่า default คือ **5,000ms (5 วินาที)** แต่สามารถส่งค่าอื่นเข้ามาได้ตอน instantiate เช่น `new TimeoutInterceptor(10000)` สำหรับ endpoint ที่ต้องการเวลามากกว่าปกติ
+
+**ทำงานเฉพาะขาออก — ทั้งหมดอยู่ใน `.pipe()`:**
+
+`_context` ถูก prefix ด้วย `_` เพราะ Interceptor นี้ไม่ต้องการดึงข้อมูลจาก request เลย — มันไม่แตะ request ขาเข้า เพียงแค่ดูแลว่า response ขาออกมาทันเวลาหรือไม่
+
+**`.pipe()` มี 2 operator ต่อกัน:**
+
+| Operator | หน้าที่ |
+|---|---|
+| `timeout(this.ms)` | ถ้า Observable ไม่ emit ค่าภายใน `ms` มิลลิวินาที → โยน `TimeoutError` เข้า stream |
+| `catchError(err)` | ดักจับ error ทุกชนิดที่ออกมาจาก stream |
+
+**Logic ใน `catchError`:**
+
+```
+err instanceof TimeoutError?
+  ใช่  → แปลงเป็น RequestTimeoutException (HTTP 408) พร้อม message บอกเวลาที่เกิน
+  ไม่ใช่ → throwError ส่ง error เดิมต่อไปโดยไม่แตะ (ให้ ExceptionFilter จัดการ)
+```
+
+เหตุที่ต้องแปลง `TimeoutError` → `RequestTimeoutException` คือ `TimeoutError` เป็น error ของ RxJS ซึ่ง NestJS ไม่รู้จัก — ถ้าไม่แปลง client จะได้รับ HTTP 500 แทนที่จะเป็น 408 ที่มีความหมายถูกต้อง
+
+#### ตัวอย่างการใช้งาน
+
+**Global (timeout เดียวทั้งแอป):**
+
+```typescript
+// app.module.ts
+{
+  provide: APP_INTERCEPTOR,
+  useClass: TimeoutInterceptor,  // ใช้ default 5,000ms
+}
+```
+
+**Per-route (timeout ต่างกันตาม endpoint):**
+
+```typescript
+// ใช้ @UseInterceptors กับ Controller หรือ method เฉพาะ
+@UseInterceptors(new TimeoutInterceptor(30000))  // 30 วินาที สำหรับ endpoint ที่ใช้เวลานาน
+@Post('export')
+exportReport() { ... }
+```
+
+#### ตัวอย่าง Response เมื่อ timeout
+
+```json
+{
+  "success": false,
+  "statusCode": 408,
+  "message": "Request timed out after 5000ms"
 }
 ```
 
