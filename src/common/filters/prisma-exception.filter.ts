@@ -50,9 +50,16 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     }
 
     private getFieldName(exception: PrismaClientKnownRequestError): string {
+        const fields = (exception.meta as any)?.driverAdapterError?.cause?.constraint?.fields;
+        if (Array.isArray(fields) && fields.length > 0) {
+            return fields.join(', ');
+        }
         const target = exception.meta?.target;
         if (Array.isArray(target) && target.length > 0) {
-            return String(target[0]);
+            return target.join(', ');
+        }
+        if (typeof target === 'string' && target.length > 0) {
+            return target;
         }
         return 'Value';
     }

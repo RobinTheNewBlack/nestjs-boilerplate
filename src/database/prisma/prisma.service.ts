@@ -17,8 +17,17 @@ export class PrismaService
   constructor() {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const adapter = new PrismaPg(pool);
+    const omitFields = { updated_at: true, deleted_at: true };
     super({
       adapter,
+      omit: {
+        customer: { ...omitFields },
+        employee: { ...omitFields },
+        inventory: { ...omitFields },
+        product: { ...omitFields },
+        salesTransaction: { ...omitFields },
+        salesTransactionItem: { ...omitFields },
+      },
       log: [
         {
           emit: 'event',
