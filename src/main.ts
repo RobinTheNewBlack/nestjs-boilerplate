@@ -25,7 +25,7 @@ async function bootstrap() {
     exceptionFactory: (validationErrors: ValidationError[]) => {
       const errors = validationErrors.map((err) => ({
         field: err.property,
-        message: Object.values(err.constraints ?? {})[0],
+        message: Object.values(err.constraints ?? {}),
       }));
       return new BadRequestException({ message: 'Validation failed', errors });
     },

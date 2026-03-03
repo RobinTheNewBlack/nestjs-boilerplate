@@ -23,20 +23,20 @@ export class CreateSalesTransactionDto {
     @IsNotEmpty({ message: 'Employee UUID must not be empty' })
     employee_uuid: string;
 
-    @IsNumber({}, { message: 'Subtotal must be a number' })
     @Min(0, { message: 'Subtotal must be at least 0' })
+    @IsNumber({}, { message: 'Subtotal must be a number' })
     subtotal: number;
 
-    @IsNumber({}, { message: 'Tax amount must be a number' })
     @Min(0, { message: 'Tax amount must be at least 0' })
+    @IsNumber({}, { message: 'Tax amount must be a number' })
     tax_amount: number;
 
-    @IsNumber({}, { message: 'Discount amount must be a number' })
     @Min(0, { message: 'Discount amount must be at least 0' })
+    @IsNumber({}, { message: 'Discount amount must be a number' })
     discount_amount: number;
 
-    @IsNumber({}, { message: 'Total amount must be a number' })
     @Min(0, { message: 'Total amount must be at least 0' })
+    @IsNumber({}, { message: 'Total amount must be a number' })
     total_amount: number;
 
     @IsEnum(PaymentMethodEnum, { message: 'Payment method must be a valid enum value' })

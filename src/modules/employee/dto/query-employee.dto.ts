@@ -3,41 +3,41 @@ import { Transform } from 'class-transformer';
 import { EmployeePositionEnum } from '@/common/enums';
 
 export class QueryEmployeeDto {
+    @MaxLength(50)
     @IsString()
     @IsOptional()
-    @MaxLength(50)
     employee_code?: string;
 
+    @MaxLength(100)
     @IsString()
     @IsOptional()
-    @MaxLength(100)
     first_name?: string;
 
+    @MaxLength(100)
     @IsString()
     @IsOptional()
-    @MaxLength(100)
     last_name?: string;
 
     @IsEnum(EmployeePositionEnum)
     @IsOptional()
     position?: EmployeePositionEnum;
 
+    @MaxLength(255)
     @IsEmail()
     @IsOptional()
-    @MaxLength(255)
     email?: string;
 
+    @MaxLength(15)
     @IsString()
     @IsOptional()
-    @MaxLength(15)
     phone?: string;
 
     @IsBoolean()
-    @IsOptional()
     @Transform(({ value }) => {
         if (value === 'true') return true;
         if (value === 'false') return false;
         return value;
     })
+    @IsOptional()
     is_active?: boolean;
 }

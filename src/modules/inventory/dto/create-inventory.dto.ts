@@ -14,13 +14,13 @@ export class CreateInventoryDto {
     @IsNotEmpty({ message: 'Product UUID must not be empty' })
     product_uuid: string;
 
+    @MaxLength(100, { message: 'Warehouse name must not exceed 100 characters' })
     @IsString({ message: 'Warehouse name must be a string' })
     @IsNotEmpty({ message: 'Warehouse name must not be empty' })
-    @MaxLength(100, { message: 'Warehouse name must not exceed 100 characters' })
     warehouse_name: string;
 
-    @IsInt({ message: 'Quantity must be an integer' })
     @Min(0, { message: 'Quantity must be at least 0' })
+    @IsInt({ message: 'Quantity must be an integer' })
     @IsNotEmpty({ message: 'Quantity must not be empty' })
     quantity: number;
 

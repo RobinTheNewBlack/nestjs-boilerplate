@@ -15,23 +15,23 @@ export class CreateSalesTransactionItemDto {
     @IsNotEmpty({ message: 'Product UUID must not be empty' })
     product_uuid: string;
 
-    @IsInt({ message: 'Quantity must be an integer' })
     @Min(1, { message: 'Quantity must be at least 1' })
+    @IsInt({ message: 'Quantity must be an integer' })
     @IsNotEmpty({ message: 'Quantity must not be empty' })
     quantity: number;
 
-    @IsNumber({}, { message: 'Unit price must be a number' })
     @Min(0, { message: 'Unit price must be at least 0' })
+    @IsNumber({}, { message: 'Unit price must be a number' })
     @IsNotEmpty({ message: 'Unit price must not be empty' })
     unit_price: number;
 
-    @IsNumber({}, { message: 'Discount amount must be a number' })
     @Min(0, { message: 'Discount amount must be at least 0' })
+    @IsNumber({}, { message: 'Discount amount must be a number' })
     @IsNotEmpty({ message: 'Discount amount must not be empty' })
     discount_amount: number;
 
-    @IsNumber({}, { message: 'Subtotal must be a number' })
     @Min(0, { message: 'Subtotal must be at least 0' })
+    @IsNumber({}, { message: 'Subtotal must be a number' })
     @IsNotEmpty({ message: 'Subtotal must not be empty' })
     subtotal: number;
 }

@@ -2,45 +2,45 @@ import { IsString, IsEmail, IsBoolean, IsOptional, IsNotEmpty, MinLength, MaxLen
 import { CustomerTypeEnum } from '@/common/enums';
 
 export class CreateCustomerDto {
+  @MaxLength(50, { message: 'Customer code must not exceed 50 characters' })
+  @MinLength(3, { message: 'Customer code must be at least 3 characters' })
   @IsString({ message: 'Customer code must be a string' })
   @IsNotEmpty({ message: 'Customer code must not be empty' })
-  @MinLength(3, { message: 'Customer code must be at least 3 characters' })
-  @MaxLength(50, { message: 'Customer code must not exceed 50 characters' })
   customer_code: string;
 
+  @MaxLength(100, { message: 'First name must not exceed 100 characters' })
   @IsString({ message: 'First name must be a string' })
   @IsNotEmpty({ message: 'First name must not be empty' })
-  @MaxLength(100, { message: 'First name must not exceed 100 characters' })
   first_name: string;
 
+  @MaxLength(100, { message: 'Last name must not exceed 100 characters' })
   @IsString({ message: 'Last name must be a string' })
   @IsNotEmpty({ message: 'Last name must not be empty' })
-  @MaxLength(100, { message: 'Last name must not exceed 100 characters' })
   last_name: string;
 
+  @MaxLength(255, { message: 'Email must not exceed 255 characters' })
   @IsEmail({}, { message: 'Email must be a valid email address' })
   @IsOptional()
-  @MaxLength(255, { message: 'Email must not exceed 255 characters' })
   email?: string;
 
+  @MaxLength(15, { message: 'Phone must not exceed 15 characters' })
   @IsString({ message: 'Phone must be a string' })
   @IsOptional()
-  @MaxLength(15, { message: 'Phone must not exceed 15 characters' })
   phone?: string;
 
+  @MaxLength(255, { message: 'Address must not exceed 255 characters' })
   @IsString({ message: 'Address must be a string' })
   @IsOptional()
-  @MaxLength(255, { message: 'Address must not exceed 255 characters' })
   address?: string;
 
+  @MaxLength(100, { message: 'City must not exceed 100 characters' })
   @IsString({ message: 'City must be a string' })
   @IsOptional()
-  @MaxLength(100, { message: 'City must not exceed 100 characters' })
   city?: string;
 
+  @MaxLength(20, { message: 'Postal code must not exceed 20 characters' })
   @IsString({ message: 'Postal code must be a string' })
   @IsOptional()
-  @MaxLength(20, { message: 'Postal code must not exceed 20 characters' })
   postal_code?: string;
 
   @IsEnum(CustomerTypeEnum, { message: 'Customer type must be a valid enum' })

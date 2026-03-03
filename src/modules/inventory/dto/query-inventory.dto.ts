@@ -6,17 +6,17 @@ export class QueryInventoryDto {
     @IsOptional()
     product_uuid?: string;
 
+    @MaxLength(100)
     @IsString()
     @IsOptional()
-    @MaxLength(100)
     warehouse_name?: string;
 
     @IsBoolean()
-    @IsOptional()
     @Transform(({ value }) => {
         if (value === 'true') return true;
         if (value === 'false') return false;
         return value;
     })
+    @IsOptional()
     is_active?: boolean;
 }
