@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
-import { SalesTransactionItemController } from './sales-transaction-item.controller';
-import { SalesTransactionItemService } from './sales-transaction-item.service';
+import { PrismaModule } from '@/database/prisma/prisma.module';
+import { SalesTransactionItemController } from '@/modules/sales-transaction-item/sales-transaction-item.controller';
+import { SalesTransactionItemService } from '@/modules/sales-transaction-item/sales-transaction-item.service';
+import { SalesTransactionItemRepository } from '@/modules/sales-transaction-item/sales-transaction-item.repository';
 
 @Module({
-  controllers: [SalesTransactionItemController],
-  providers: [SalesTransactionItemService]
+    imports: [PrismaModule],
+    controllers: [SalesTransactionItemController],
+    providers: [SalesTransactionItemService, SalesTransactionItemRepository],
 })
 export class SalesTransactionItemModule {}
