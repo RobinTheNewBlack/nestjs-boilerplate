@@ -63,8 +63,9 @@ Client Request
 
 - [5. Middleware](./05-middleware.md)
 - [6. Guards](./06-guards.md)
-- [7. Exception Filters & Interceptors](./07-filters-and-interceptors.md)
-- [8. Rate Limiting](./08-rate-limiting.md)
-- [9. Enums](./09-enums.md)
+- [7. Exception Filters](./07-filters.md)
+- [8. Interceptors](./08-interceptors.md)
+- [9. Rate Limiting](./09-rate-limiting.md)
+- [10. Enums](./10-enums.md)
 
 ---

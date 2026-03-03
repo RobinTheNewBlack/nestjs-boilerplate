@@ -1,6 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from '@/app.controller';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
@@ -10,6 +10,8 @@ import { SalesTransactionItemModule } from './modules/sales-transaction-item/sal
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { CustomerModule } from './modules/customers/customer.module';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+
 @Module({
   imports: [
     ThrottlerModule.forRoot([
@@ -38,6 +40,11 @@ import { CustomerModule } from './modules/customers/customer.module';
   ],
   controllers: [AppController],
   providers: [
+    // Global Interceptors
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
     // Global Rate Limiting
     {
       provide: APP_GUARD,
