@@ -61,11 +61,11 @@ Client Request
 
 ### 📖 อ่านรายละเอียดแต่ละเครื่องมือได้ที่
 
-- [5. Middleware](./05-middleware.md)
-- [6. Guards](./06-guards.md)
-- [7. Exception Filters](./07-filters.md)
-- [8. Interceptors](./08-interceptors.md)
-- [9. Rate Limiting](./09-rate-limiting.md)
-- [10. Enums](./10-enums.md)
+- [Middleware](./05-middleware.md)
+- [Guards](./06-guards.md)
+- [Exception Filters](./07-filters.md)
+- [Interceptors](./08-interceptors.md)
+- [Rate Limiting](./09-rate-limiting.md)
+- [Enums](./10-enums.md)
 
 ---
