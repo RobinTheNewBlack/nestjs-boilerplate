@@ -1,5 +1,5 @@
 import { IsString, IsEmail, IsBoolean, IsOptional, MaxLength, IsEnum } from 'class-validator';
-import { CustomerTypeEnum } from 'src/common/enums';
+import { CustomerTypeEnum } from '@/common/enums';
 import { Transform } from 'class-transformer';
 
 export class QueryCustomerDto {

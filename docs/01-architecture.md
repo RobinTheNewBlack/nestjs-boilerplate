@@ -53,6 +53,46 @@ export class CustomerModule {}
 - `@Query()`: ดึงพารามิเตอร์ที่ต่อท้าย URL มาด้วย Query String (เช่น `/customers?search=tony`)
 - `@Req()`, `@Res()`: (ถ้าจำเป็น) ดึง Request/Response Object แบบดั้งเดิม (Express/Fastify) ออกมาจัดการเอง
 
+### 💡 เสริมความเข้าใจ: `@Req()` vs `@Query()` — ใช้ตัวไหนดี?
+
+`@Req()` และ `@Query()` ดึงข้อมูลจาก Request เหมือนกัน แต่มีพฤติกรรมต่างกันมาก:
+
+```typescript
+// ❌ ใช้ @Req() ดึง query params — ข้าม ValidationPipe ไปเลย
+@Get()
+findAll(@Req() req: RequestWithUser) {
+  const page = req.query.page; // typed แค่ string | ParsedQs | string[] | ParsedQs[]
+}
+
+// ✅ ใช้ @Query() — ผ่าน ValidationPipe: validate, whitelist, transform ครบ
+@Get()
+findAll(@Query() query: QueryCustomerDto) {
+  const page = query.page; // typed ตาม DTO, แปลงค่าให้แล้ว
+}
+```
+
+| | `@Query()` | `req.query` ผ่าน `@Req()` |
+|---|---|---|
+| ผ่าน ValidationPipe | ✅ ใช่ | ❌ ไม่ |
+| Type-safe ตาม DTO | ✅ ใช่ | ❌ ไม่ (loose type) |
+| Transform อัตโนมัติ | ✅ ใช่ | ❌ ไม่ |
+
+**แนวทางที่ถูกต้อง:** ใช้ `@Req() req: RequestWithUser` เฉพาะเมื่อต้องการข้อมูลที่อยู่บน Request Object เท่านั้น เช่น `req.user` (จาก JwtAuthGuard) หรือ `req.correlationId` (จาก CorrelationIdMiddleware) — ส่วน Query Params, Body, และ Params ให้ใช้ Decorator เฉพาะทางตามปกติ
+
+```typescript
+// ✅ Pattern ที่ถูกต้อง: ผสมใช้งานได้ตามความเหมาะสม
+@Get()
+findAll(
+  @Query() query: QueryCustomerDto,   // query params — ผ่าน ValidationPipe
+  @Req() req: RequestWithUser,        // user / correlationId — เฉพาะที่อยู่บน req
+) {
+  const user = req.user;              // JwtPayload | undefined
+  const id   = req.correlationId;    // string
+}
+```
+
+---
+
 **ตัวอย่างโค้ด:**
 ```typescript
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';

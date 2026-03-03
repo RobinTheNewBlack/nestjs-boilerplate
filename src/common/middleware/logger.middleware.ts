@@ -1,12 +1,13 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
+import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
     // สร้างตัวแปร logger โดยระบุ Context ว่า 'HTTP' เพื่อให้จัดกลุ่ม Log ได้ง่าย
-    private logger = new Logger('HTTP');
+    private logger = new Logger(LoggerMiddleware.name);
 
-    use(req: Request, res: Response, next: NextFunction) {
+    use(req: RequestWithUser, res: Response, next: NextFunction) {
         // 1. เก็บข้อมูลตอนที่ Request เพิ่งเข้ามาถึง
         const { method, originalUrl, ip } = req;
         const userAgent = req.get('user-agent') || '';
@@ -19,7 +20,7 @@ export class LoggerMiddleware implements NestMiddleware {
             const responseTime = Date.now() - startTime; // คำนวณเวลาที่ใช้ไปทั้งหมด
 
             // ดึง Correlation ID ที่ได้จาก correlation-id.middleware.ts (ถ้ามี)
-            const correlationId = req['correlationId'] || '-';
+            const correlationId = req.correlationId || '-';
 
             // 3. พิมพ์ Log ออกมาทาง Console หรือส่งเข้าไฟล์
             // รูปแบบ: [CorrelationID] GET /api/v1/users 200 120b - PostmanRuntime/7.29.2 ::1 - 15ms

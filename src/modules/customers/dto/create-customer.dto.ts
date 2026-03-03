@@ -1,5 +1,5 @@
 import { IsString, IsEmail, IsBoolean, IsOptional, IsNotEmpty, MinLength, MaxLength, IsEnum } from 'class-validator';
-import { CustomerTypeEnum } from 'src/common/enums';
+import { CustomerTypeEnum } from '@/common/enums';
 
 export class CreateCustomerDto {
   @IsString({ message: 'Customer code must be a string' })

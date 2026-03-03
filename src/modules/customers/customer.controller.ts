@@ -34,6 +34,7 @@ export class CustomerController {
   @Get()
   @HttpCode(HttpStatus.OK)
   findAll(@Query() query: QueryCustomerDto) {
+    console.log('query', query);
     return this.customerService.getAllCustomers(query);
   }
 
