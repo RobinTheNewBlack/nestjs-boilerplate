@@ -8,14 +8,9 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { ProductModule } from './modules/product/product.module';
 import { SalesTransactionModule } from './modules/sales-transaction/sales-transaction.module';
 import { SalesTransactionItemModule } from './modules/sales-transaction-item/sales-transaction-item.module';
-import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
-import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { CorrelationIdMiddleware, LoggerMiddleware } from './common/middleware';
+import { LoggingInterceptor, TransformResponseInterceptor, TimeoutInterceptor } from './common/interceptors';
+import { AllExceptionsFilter, PrismaExceptionFilter, HttpExceptionFilter } from './common/filters';
 
 @Module({
   imports: [
