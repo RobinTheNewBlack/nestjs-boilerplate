@@ -67,5 +67,6 @@ Client Request
 - [Interceptors](./08-interceptors.md)
 - [Rate Limiting](./09-rate-limiting.md)
 - [Enums](./10-enums.md)
+- [Interfaces](./11-interfaces.md)
 
 ---

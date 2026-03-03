@@ -15,4 +15,5 @@
   - [4.4 Interceptors (ตัวจัดการ Response แบบ Global)](./docs/08-interceptors.md)
   - [4.5 Rate Limit (ตัวจัดการ Rate Limit)](./docs/09-rate-limiting.md)
   - [4.6 Enums (TypeScript Enum & ศูนย์รวมค่าคงที่)](./docs/10-enums.md)
+  - [4.7 Interfaces (กำหนดโครงสร้างข้อมูลร่วมกัน)](./docs/11-interfaces.md)
 - [5. การใช้งาน Prisma แบบครบวงจรในโปรเจกต์ NestJS](./docs/20-prisma-setup.md)
