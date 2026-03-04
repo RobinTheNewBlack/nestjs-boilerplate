@@ -2,6 +2,7 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from '@/app.controller';
+import { AuthModule } from './modules/auth/auth.module';
 import { CustomerModule } from './modules/customers/customer.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
@@ -11,6 +12,7 @@ import { SalesTransactionItemModule } from './modules/sales-transaction-item/sal
 import { CorrelationIdMiddleware, LoggerMiddleware } from './common/middleware';
 import { LoggingInterceptor, TransformResponseInterceptor, TimeoutInterceptor } from './common/interceptors';
 import { AllExceptionsFilter, PrismaExceptionFilter, HttpExceptionFilter } from './common/filters';
+import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { AllExceptionsFilter, PrismaExceptionFilter, HttpExceptionFilter } from 
         limit: 100,          // สูงสุด 100 requests ต่อนาที (ต่อ 1 IP)
       },
     ]),
+    AuthModule,
     EmployeeModule,
     InventoryModule,
     ProductModule,
@@ -70,6 +73,15 @@ import { AllExceptionsFilter, PrismaExceptionFilter, HttpExceptionFilter } from 
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Global Auth Guards (order matters: JWT first, then Roles)
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

@@ -8,7 +8,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
-import { Request } from 'express';
+import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -16,15 +16,15 @@ export class LoggingInterceptor implements NestInterceptor {
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         const http = context.switchToHttp();
-        const request = http.getRequest<Request>();
+        const request = http.getRequest<RequestWithUser>();
         const response = http.getResponse();
 
         // ── ดึงข้อมูลจาก request ──
         const method = request.method;                                                          // GET, POST, PUT, DELETE
         const url = request.originalUrl;                                                        // /api/v1/customers?page=1
         const ip = String(request.headers['x-forwarded-for'] ?? request.ip).split(',')[0].trim(); // IP ของ client
-        const correlationId = request['correlationId'] || '-';                                  // จาก CorrelationIdMiddleware
-        const userId = request['user']?.id || 'anonymous';                                      // จาก JwtAuthGuard
+        const correlationId = request.correlationId || '-';                                  // จาก CorrelationIdMiddleware
+        const userId = request.user?.sub || (request as any).user?.id || 'anonymous';                                      // จาก JwtAuthGuard
         const body = this.sanitizeBody(request.body);                                           // ซ่อน password
 
         // ── ขาเข้า: Log request ──
