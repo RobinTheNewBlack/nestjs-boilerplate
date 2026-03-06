@@ -17,6 +17,7 @@
   - [4.6 Enums (TypeScript Enum & ศูนย์รวมค่าคงที่)](./docs/10-enums.md)
   - [4.7 Interfaces (กำหนดโครงสร้างข้อมูลร่วมกัน)](./docs/11-interfaces.md)
 - [5. การใช้งาน Prisma แบบครบวงจรในโปรเจกต์ NestJS](./docs/20-prisma-setup.md)
+- [6. Authentication & Authorization ด้วย Keycloak + JWT](./docs/12-authentication-authorization.md)
 
 ---
 
