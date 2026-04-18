@@ -6,7 +6,7 @@ import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 
 @Injectable()
 export class CustomerRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateCustomerDto) {
     return await this.prisma.customer.create({

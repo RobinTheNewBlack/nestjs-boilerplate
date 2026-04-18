@@ -1,4 +1,11 @@
-import { IsString, IsEmail, IsBoolean, IsOptional, MaxLength, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsBoolean,
+  IsOptional,
+  MaxLength,
+  IsEnum,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { CustomerTypeEnum } from '@/common/enums';
 

@@ -5,8 +5,8 @@ import { InventoryService } from '@/modules/inventory/inventory.service';
 import { InventoryRepository } from '@/modules/inventory/inventory.repository';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [InventoryController],
-    providers: [InventoryService, InventoryRepository],
+  imports: [PrismaModule],
+  controllers: [InventoryController],
+  providers: [InventoryService, InventoryRepository],
 })
 export class InventoryModule {}

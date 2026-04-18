@@ -9,28 +9,36 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { ProductModule } from './modules/product/product.module';
 import { SalesTransactionModule } from './modules/sales-transaction/sales-transaction.module';
 import { SalesTransactionItemModule } from './modules/sales-transaction-item/sales-transaction-item.module';
-import { CorrelationIdMiddleware, LoggerMiddleware } from './common/middleware';
-import { LoggingInterceptor, TransformResponseInterceptor, TimeoutInterceptor } from './common/interceptors';
-import { AllExceptionsFilter, PrismaExceptionFilter, HttpExceptionFilter } from './common/filters';
+import { CorrelationIdMiddleware } from './common/middleware';
+import {
+  LoggingInterceptor,
+  TransformResponseInterceptor,
+  TimeoutInterceptor,
+} from './common/interceptors';
+import {
+  AllExceptionsFilter,
+  PrismaExceptionFilter,
+  HttpExceptionFilter,
+} from './common/filters';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
   imports: [
     ThrottlerModule.forRoot([
       {
-        name: 'short',       // ป้องกัน burst request
-        ttl: 1000,           // 1 วินาที
-        limit: 3,            // สูงสุด 3 requests ต่อวินาที (ต่อ 1 IP)
+        name: 'short', // ป้องกัน burst request
+        ttl: 1000, // 1 วินาที
+        limit: 3, // สูงสุด 3 requests ต่อวินาที (ต่อ 1 IP)
       },
       {
-        name: 'medium',      // ป้องกัน abuse ระดับปานกลาง
-        ttl: 10000,          // 10 วินาที
-        limit: 20,           // สูงสุด 20 requests ต่อ 10 วินาที (ต่อ 1 IP)
+        name: 'medium', // ป้องกัน abuse ระดับปานกลาง
+        ttl: 10000, // 10 วินาที
+        limit: 20, // สูงสุด 20 requests ต่อ 10 วินาที (ต่อ 1 IP)
       },
       {
-        name: 'long',        // ป้องกัน abuse ระยะยาว
-        ttl: 60000,          // 1 นาที
-        limit: 100,          // สูงสุด 100 requests ต่อนาที (ต่อ 1 IP)
+        name: 'long', // ป้องกัน abuse ระยะยาว
+        ttl: 60000, // 1 นาที
+        limit: 100, // สูงสุด 100 requests ต่อนาที (ต่อ 1 IP)
       },
     ]),
     AuthModule,
@@ -46,7 +54,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     // Global Filters — ลงทะเบียนจาก broad → specific (last-in, first-run)
     {
       provide: APP_FILTER,
-      useClass: AllExceptionsFilter,   // fallback: รันสุดท้าย
+      useClass: AllExceptionsFilter, // fallback: รันสุดท้าย
     },
     {
       provide: APP_FILTER,
@@ -54,7 +62,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     },
     {
       provide: APP_FILTER,
-      useClass: HttpExceptionFilter,   // HTTP errors: รันก่อน
+      useClass: HttpExceptionFilter, // HTTP errors: รันก่อน
     },
     // Global Interceptors
     {
@@ -89,7 +97,8 @@ export class AppModule implements NestModule {
   // ลงทะเบียน Middleware ของเราตรงนี้
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CorrelationIdMiddleware, LoggerMiddleware)
+      .apply(CorrelationIdMiddleware)
+      // .apply(CorrelationIdMiddleware, LoggerMiddleware)
       .forRoutes('*'); // ให้ทำงานกับทุกๆ Route
   }
 }

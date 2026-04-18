@@ -5,8 +5,8 @@ import { SalesTransactionService } from '@/modules/sales-transaction/sales-trans
 import { SalesTransactionRepository } from '@/modules/sales-transaction/sales-transaction.repository';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [SalesTransactionController],
-    providers: [SalesTransactionService, SalesTransactionRepository],
+  imports: [PrismaModule],
+  controllers: [SalesTransactionController],
+  providers: [SalesTransactionService, SalesTransactionRepository],
 })
 export class SalesTransactionModule {}

@@ -11,7 +11,7 @@ import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
 
 @Injectable()
 export class CustomerService {
-  constructor(private readonly customerRepository: CustomerRepository) { }
+  constructor(private readonly customerRepository: CustomerRepository) {}
 
   async createCustomer(data: CreateCustomerDto) {
     if (!data.first_name || !data.last_name) {

@@ -6,25 +6,25 @@ import { QueryEmployeeDto } from '@/modules/employee/dto/query-employee.dto';
 
 @Injectable()
 export class EmployeeRepository {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    async create(data: CreateEmployeeDto) {
-        return await this.prisma.employee.create({ data });
-    }
+  async create(data: CreateEmployeeDto) {
+    return await this.prisma.employee.create({ data });
+  }
 
-    async findAll(query: QueryEmployeeDto) {
-        return await this.prisma.employee.findMany({ where: query });
-    }
+  async findAll(query: QueryEmployeeDto) {
+    return await this.prisma.employee.findMany({ where: query });
+  }
 
-    async findById(uuid: string) {
-        return await this.prisma.employee.findUnique({ where: { uuid } });
-    }
+  async findById(uuid: string) {
+    return await this.prisma.employee.findUnique({ where: { uuid } });
+  }
 
-    async update(uuid: string, data: UpdateEmployeeDto) {
-        return await this.prisma.employee.update({ where: { uuid }, data });
-    }
+  async update(uuid: string, data: UpdateEmployeeDto) {
+    return await this.prisma.employee.update({ where: { uuid }, data });
+  }
 
-    async delete(uuid: string) {
-        return await this.prisma.employee.delete({ where: { uuid } });
-    }
+  async delete(uuid: string) {
+    return await this.prisma.employee.delete({ where: { uuid } });
+  }
 }

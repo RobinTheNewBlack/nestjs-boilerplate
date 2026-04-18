@@ -6,38 +6,38 @@ import { QuerySalesTransactionItemDto } from '@/modules/sales-transaction-item/d
 
 @Injectable()
 export class SalesTransactionItemRepository {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    async create(data: CreateSalesTransactionItemDto) {
-        return await this.prisma.salesTransactionItem.create({
-            data,
-            include: { product: true, transaction: true },
-        });
-    }
+  async create(data: CreateSalesTransactionItemDto) {
+    return await this.prisma.salesTransactionItem.create({
+      data,
+      include: { product: true, transaction: true },
+    });
+  }
 
-    async findAll(query: QuerySalesTransactionItemDto) {
-        return await this.prisma.salesTransactionItem.findMany({
-            where: query,
-            include: { product: true, transaction: true },
-        });
-    }
+  async findAll(query: QuerySalesTransactionItemDto) {
+    return await this.prisma.salesTransactionItem.findMany({
+      where: query,
+      include: { product: true, transaction: true },
+    });
+  }
 
-    async findById(uuid: string) {
-        return await this.prisma.salesTransactionItem.findUnique({
-            where: { uuid },
-            include: { product: true, transaction: true },
-        });
-    }
+  async findById(uuid: string) {
+    return await this.prisma.salesTransactionItem.findUnique({
+      where: { uuid },
+      include: { product: true, transaction: true },
+    });
+  }
 
-    async update(uuid: string, data: UpdateSalesTransactionItemDto) {
-        return await this.prisma.salesTransactionItem.update({
-            where: { uuid },
-            data,
-            include: { product: true, transaction: true },
-        });
-    }
+  async update(uuid: string, data: UpdateSalesTransactionItemDto) {
+    return await this.prisma.salesTransactionItem.update({
+      where: { uuid },
+      data,
+      include: { product: true, transaction: true },
+    });
+  }
 
-    async delete(uuid: string) {
-        return await this.prisma.salesTransactionItem.delete({ where: { uuid } });
-    }
+  async delete(uuid: string) {
+    return await this.prisma.salesTransactionItem.delete({ where: { uuid } });
+  }
 }

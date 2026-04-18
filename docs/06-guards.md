@@ -19,7 +19,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // สามารถแทรก Logic เพิ่มเติมตรงนี้ได้
     return super.canActivate(context);
   }
-
+  // handleRequest ตรงนี้ใช้สำหรับ custom error response แทนที่จะใช้ default ของ nest ถ้าไม่ต้องการ custom ก็ไม่ต้องมี 
   handleRequest(err, user, info) {
     if (err || !user) {
       throw err || new UnauthorizedException('กรุณาเข้าสู่ระบบก่อนใช้งาน');

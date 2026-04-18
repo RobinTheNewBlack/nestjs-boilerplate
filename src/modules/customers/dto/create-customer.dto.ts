@@ -1,4 +1,13 @@
-import { IsString, IsEmail, IsBoolean, IsOptional, IsNotEmpty, MinLength, MaxLength, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsBoolean,
+  IsOptional,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CustomerTypeEnum } from '@/common/enums';
 

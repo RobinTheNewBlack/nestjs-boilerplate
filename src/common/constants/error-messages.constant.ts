@@ -18,7 +18,8 @@ export const ERROR_MESSAGES = {
     NOT_FOUND: (id: string) => `Sales transaction not found with ID: ${id}`,
   },
   SALES_TRANSACTION_ITEM: {
-    NOT_FOUND: (id: string) => `Sales transaction item not found with ID: ${id}`,
+    NOT_FOUND: (id: string) =>
+      `Sales transaction item not found with ID: ${id}`,
   },
   USER: {
     NOT_FOUND: (id: string) => `User not found with ID: ${id}`,

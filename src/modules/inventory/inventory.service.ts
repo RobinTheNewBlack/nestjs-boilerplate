@@ -7,31 +7,31 @@ import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
 
 @Injectable()
 export class InventoryService {
-    constructor(private readonly inventoryRepository: InventoryRepository) {}
+  constructor(private readonly inventoryRepository: InventoryRepository) {}
 
-    async createInventory(data: CreateInventoryDto) {
-        return await this.inventoryRepository.create(data);
-    }
+  async createInventory(data: CreateInventoryDto) {
+    return await this.inventoryRepository.create(data);
+  }
 
-    async getAllInventories(query: QueryInventoryDto) {
-        return await this.inventoryRepository.findAll(query);
-    }
+  async getAllInventories(query: QueryInventoryDto) {
+    return await this.inventoryRepository.findAll(query);
+  }
 
-    async getInventoryById(uuid: string) {
-        const inventory = await this.inventoryRepository.findById(uuid);
-        if (!inventory) {
-            throw new NotFoundException(ERROR_MESSAGES.INVENTORY.NOT_FOUND(uuid));
-        }
-        return inventory;
+  async getInventoryById(uuid: string) {
+    const inventory = await this.inventoryRepository.findById(uuid);
+    if (!inventory) {
+      throw new NotFoundException(ERROR_MESSAGES.INVENTORY.NOT_FOUND(uuid));
     }
+    return inventory;
+  }
 
-    async updateInventory(uuid: string, data: UpdateInventoryDto) {
-        await this.getInventoryById(uuid);
-        return await this.inventoryRepository.update(uuid, data);
-    }
+  async updateInventory(uuid: string, data: UpdateInventoryDto) {
+    await this.getInventoryById(uuid);
+    return await this.inventoryRepository.update(uuid, data);
+  }
 
-    async deleteInventory(uuid: string) {
-        await this.getInventoryById(uuid);
-        return await this.inventoryRepository.delete(uuid);
-    }
+  async deleteInventory(uuid: string) {
+    await this.getInventoryById(uuid);
+    return await this.inventoryRepository.delete(uuid);
+  }
 }

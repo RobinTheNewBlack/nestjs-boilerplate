@@ -7,31 +7,31 @@ import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
 
 @Injectable()
 export class EmployeeService {
-    constructor(private readonly employeeRepository: EmployeeRepository) {}
+  constructor(private readonly employeeRepository: EmployeeRepository) {}
 
-    async createEmployee(data: CreateEmployeeDto) {
-        return await this.employeeRepository.create(data);
-    }
+  async createEmployee(data: CreateEmployeeDto) {
+    return await this.employeeRepository.create(data);
+  }
 
-    async getAllEmployees(query: QueryEmployeeDto) {
-        return await this.employeeRepository.findAll(query);
-    }
+  async getAllEmployees(query: QueryEmployeeDto) {
+    return await this.employeeRepository.findAll(query);
+  }
 
-    async getEmployeeById(uuid: string) {
-        const employee = await this.employeeRepository.findById(uuid);
-        if (!employee) {
-            throw new NotFoundException(ERROR_MESSAGES.EMPLOYEE.NOT_FOUND(uuid));
-        }
-        return employee;
+  async getEmployeeById(uuid: string) {
+    const employee = await this.employeeRepository.findById(uuid);
+    if (!employee) {
+      throw new NotFoundException(ERROR_MESSAGES.EMPLOYEE.NOT_FOUND(uuid));
     }
+    return employee;
+  }
 
-    async updateEmployee(uuid: string, data: UpdateEmployeeDto) {
-        await this.getEmployeeById(uuid);
-        return await this.employeeRepository.update(uuid, data);
-    }
+  async updateEmployee(uuid: string, data: UpdateEmployeeDto) {
+    await this.getEmployeeById(uuid);
+    return await this.employeeRepository.update(uuid, data);
+  }
 
-    async deleteEmployee(uuid: string) {
-        await this.getEmployeeById(uuid);
-        return await this.employeeRepository.delete(uuid);
-    }
+  async deleteEmployee(uuid: string) {
+    await this.getEmployeeById(uuid);
+    return await this.employeeRepository.delete(uuid);
+  }
 }

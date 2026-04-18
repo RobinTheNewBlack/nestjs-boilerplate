@@ -10,7 +10,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CustomerService } from '@/modules/customers/customer.service';
 import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
@@ -21,7 +26,7 @@ import { CurrentUser, Roles } from '@/common/decorators';
 @ApiBearerAuth()
 @Controller('customers')
 export class CustomerController {
-  constructor(private readonly customerService: CustomerService) { }
+  constructor(private readonly customerService: CustomerService) {}
 
   @Post()
   @Roles('admin', 'manager')
@@ -62,7 +67,11 @@ export class CustomerController {
   @ApiResponse({ status: 200, description: 'Customer updated successfully' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 404, description: 'Customer not found' })
-  update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto, @CurrentUser() user) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCustomerDto: UpdateCustomerDto,
+    @CurrentUser() user,
+  ) {
     console.log(`${user.username} is updating customer ${id}`);
     return this.customerService.updateCustomer(id, updateCustomerDto);
   }
