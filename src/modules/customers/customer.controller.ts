@@ -21,6 +21,7 @@ import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
 import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
 import { CurrentUser, Roles } from '@/common/decorators';
+import type { JwtPayload } from '@/common/interfaces';
 
 @ApiTags('Customers')
 @ApiBearerAuth()
@@ -34,7 +35,7 @@ export class CustomerController {
   @ApiOperation({ summary: 'Create a new customer' })
   @ApiResponse({ status: 201, description: 'Customer created successfully' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  create(@Body() data: CreateCustomerDto, @CurrentUser() user) {
+  create(@Body() data: CreateCustomerDto, @CurrentUser() user: JwtPayload) {
     console.log(`${user.username} is creating a customer`);
     return this.customerService.createCustomer(data);
   }
@@ -45,7 +46,7 @@ export class CustomerController {
   @ApiOperation({ summary: 'Get customer by ID' })
   @ApiResponse({ status: 200, description: 'Customer found' })
   @ApiResponse({ status: 404, description: 'Customer not found' })
-  findOne(@Param('id') id: string, @CurrentUser() user) {
+  findOne(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     console.log(`${user.username} is fetching customer ${id}`);
     return this.customerService.getCustomerById(id);
   }
@@ -55,7 +56,7 @@ export class CustomerController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get all customers' })
   @ApiResponse({ status: 200, description: 'List of customers' })
-  findAll(@Query() query: QueryCustomerDto, @CurrentUser() user) {
+  findAll(@Query() query: QueryCustomerDto, @CurrentUser() user: JwtPayload) {
     console.log(`${user.username} is listing customers`);
     return this.customerService.getAllCustomers(query);
   }
@@ -70,7 +71,7 @@ export class CustomerController {
   update(
     @Param('id') id: string,
     @Body() updateCustomerDto: UpdateCustomerDto,
-    @CurrentUser() user,
+    @CurrentUser() user: JwtPayload,
   ) {
     console.log(`${user.username} is updating customer ${id}`);
     return this.customerService.updateCustomer(id, updateCustomerDto);
@@ -82,7 +83,7 @@ export class CustomerController {
   @ApiOperation({ summary: 'Delete customer by ID' })
   @ApiResponse({ status: 204, description: 'Customer deleted successfully' })
   @ApiResponse({ status: 404, description: 'Customer not found' })
-  remove(@Param('id') id: string, @CurrentUser() user) {
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     console.log(`${user.username} is deleting customer ${id}`);
     return this.customerService.deleteCustomer(id);
   }
