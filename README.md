@@ -21,6 +21,108 @@
 
 ---
 
+## 🛠️ วิธีสร้าง NestJS Project ใหม่ตั้งแต่ต้น
+
+### 1. ติดตั้ง NestJS CLI (ครั้งเดียว)
+
+```bash
+npm install -g @nestjs/cli
+```
+
+ตรวจสอบว่าติดตั้งสำเร็จ:
+
+```bash
+nest --version
+```
+
+### 2. สร้าง Project ใหม่
+
+```bash
+nest new <ชื่อโปรเจกต์>
+
+# ตัวอย่าง
+nest new my-first-nestjs
+```
+
+> CLI จะถามให้เลือก package manager (`npm` / `yarn` / `pnpm`) — แนะนำให้เลือก **npm**
+
+### 3. เข้าไปยังโฟลเดอร์โปรเจกต์
+
+```bash
+cd my-first-nestjs
+```
+
+### 4. โครงสร้างไฟล์เริ่มต้นที่ได้
+
+```
+my-first-nestjs/
+├── src/
+│   ├── app.controller.ts       # Controller ตัวอย่าง
+│   ├── app.controller.spec.ts  # Unit test ของ Controller
+│   ├── app.module.ts           # Root Module
+│   ├── app.service.ts          # Service ตัวอย่าง
+│   └── main.ts                 # Entry point ของแอป
+├── test/
+│   └── app.e2e-spec.ts         # End-to-end test
+├── .eslintrc.js
+├── .prettierrc
+├── nest-cli.json
+├── package.json
+├── tsconfig.json
+└── tsconfig.build.json
+```
+
+### 5. ทดสอบรัน Server ครั้งแรก
+
+```bash
+npm run start:dev
+```
+
+เปิดเบราว์เซอร์แล้วเข้า `http://localhost:3000` — ถ้าเห็น `Hello World!` แสดงว่าสำเร็จ ✅
+
+### 6. สร้าง Module / Controller / Service ใหม่ (NestJS CLI)
+
+```bash
+# สร้าง Module
+nest generate module <ชื่อ>
+nest g mo <ชื่อ>            # แบบย่อ
+
+# สร้าง Controller
+nest generate controller <ชื่อ>
+nest g co <ชื่อ>            # แบบย่อ
+
+# สร้าง Service
+nest generate service <ชื่อ>
+nest g s <ชื่อ>             # แบบย่อ
+
+# สร้าง Resource (Module + Controller + Service + DTO ครบชุดในคำสั่งเดียว)
+nest generate resource <ชื่อ>
+nest g res <ชื่อ>           # แบบย่อ
+```
+
+### 7. ติดตั้ง Library ที่ใช้บ่อยในโปรเจกต์นี้ (Optional)
+
+```bash
+# Validation (class-validator + class-transformer)
+npm install class-validator class-transformer
+
+# Prisma ORM
+npm install prisma @prisma/client
+npx prisma init
+
+# Rate Limiting
+npm install @nestjs/throttler
+
+# Config Module (จัดการ .env)
+npm install @nestjs/config
+
+# JWT & Passport (Authentication)
+npm install @nestjs/jwt @nestjs/passport passport passport-jwt
+npm install -D @types/passport-jwt
+```
+
+---
+
 ## 🚀 วิธีรัน Server
 
 ### 1. ติดตั้ง Dependencies
@@ -75,51 +177,51 @@ Base API path: `http://localhost:3000/api/v1`
 
 ### Development
 
-| คำสั่ง | รายละเอียด |
-|--------|-----------|
-| `npm run start` | รัน server แบบปกติ (ไม่มี hot reload) |
-| `npm run start:dev` | รัน server พร้อม hot reload (แนะนำสำหรับ dev) |
-| `npm run start:debug` | รัน server พร้อม hot reload + debug mode |
+| คำสั่ง                | รายละเอียด                                    |
+| --------------------- | --------------------------------------------- |
+| `npm run start`       | รัน server แบบปกติ (ไม่มี hot reload)         |
+| `npm run start:dev`   | รัน server พร้อม hot reload (แนะนำสำหรับ dev) |
+| `npm run start:debug` | รัน server พร้อม hot reload + debug mode      |
 
 ### Build & Production
 
-| คำสั่ง | รายละเอียด |
-|--------|-----------|
-| `npm run build` | Compile TypeScript → JavaScript ลงโฟลเดอร์ `dist/` |
+| คำสั่ง               | รายละเอียด                                         |
+| -------------------- | -------------------------------------------------- |
+| `npm run build`      | Compile TypeScript → JavaScript ลงโฟลเดอร์ `dist/` |
 | `npm run start:prod` | รัน server จากไฟล์ที่ build แล้ว (ต้อง build ก่อน) |
 
 ### Code Quality
 
-| คำสั่ง | รายละเอียด |
-|--------|-----------|
+| คำสั่ง           | รายละเอียด                                  |
+| ---------------- | ------------------------------------------- |
 | `npm run format` | จัดรูปแบบ code ด้วย Prettier (เขียนทับไฟล์) |
-| `npm run lint` | ตรวจสอบและแก้ไข code ด้วย ESLint อัตโนมัติ |
+| `npm run lint`   | ตรวจสอบและแก้ไข code ด้วย ESLint อัตโนมัติ  |
 
 ### Testing
 
-| คำสั่ง | รายละเอียด |
-|--------|-----------|
-| `npm run test` | รัน unit tests ทั้งหมด |
+| คำสั่ง               | รายละเอียด                                                |
+| -------------------- | --------------------------------------------------------- |
+| `npm run test`       | รัน unit tests ทั้งหมด                                    |
 | `npm run test:watch` | รัน unit tests พร้อม watch mode (re-run เมื่อไฟล์เปลี่ยน) |
-| `npm run test:cov` | รัน unit tests พร้อมสร้าง coverage report |
-| `npm run test:debug` | รัน unit tests ใน debug mode |
-| `npm run test:e2e` | รัน end-to-end tests |
+| `npm run test:cov`   | รัน unit tests พร้อมสร้าง coverage report                 |
+| `npm run test:debug` | รัน unit tests ใน debug mode                              |
+| `npm run test:e2e`   | รัน end-to-end tests                                      |
 
 ### Prisma
 
-| คำสั่ง | รายละเอียด |
-|--------|-----------|
-| `npx prisma migrate dev` | สร้าง migration ใหม่และ apply ลง DB (สำหรับ dev) |
-| `npx prisma migrate deploy` | Apply migrations ที่มีอยู่ลง DB (สำหรับ production) |
-| `npx prisma db push` | Push schema ไปยัง DB โดยตรง (ไม่สร้างไฟล์ migration) |
-| `npx prisma studio` | เปิด Prisma Studio GUI เพื่อดูและแก้ไขข้อมูลใน DB |
-| `npx prisma generate` | Regenerate Prisma Client หลังแก้ไข `schema.prisma` |
-| `npx prisma db seed` | รัน seed script เพื่อเพิ่มข้อมูลตัวอย่างลง DB |
+| คำสั่ง                      | รายละเอียด                                           |
+| --------------------------- | ---------------------------------------------------- |
+| `npx prisma migrate dev`    | สร้าง migration ใหม่และ apply ลง DB (สำหรับ dev)     |
+| `npx prisma migrate deploy` | Apply migrations ที่มีอยู่ลง DB (สำหรับ production)  |
+| `npx prisma db push`        | Push schema ไปยัง DB โดยตรง (ไม่สร้างไฟล์ migration) |
+| `npx prisma studio`         | เปิด Prisma Studio GUI เพื่อดูและแก้ไขข้อมูลใน DB    |
+| `npx prisma generate`       | Regenerate Prisma Client หลังแก้ไข `schema.prisma`   |
+| `npx prisma db seed`        | รัน seed script เพื่อเพิ่มข้อมูลตัวอย่างลง DB        |
 
 ### Docker
 
-| คำสั่ง | รายละเอียด |
-|--------|-----------|
-| `docker compose up -d` | เปิด PostgreSQL database ใน background |
-| `docker compose down` | ปิด containers ทั้งหมด |
+| คำสั่ง                   | รายละเอียด                                      |
+| ------------------------ | ----------------------------------------------- |
+| `docker compose up -d`   | เปิด PostgreSQL database ใน background          |
+| `docker compose down`    | ปิด containers ทั้งหมด                          |
 | `docker compose down -v` | ปิด containers และลบ volume (ข้อมูลใน DB จะหาย) |

@@ -7,7 +7,7 @@ import { CustomerRepository } from '@/modules/customers/customer.repository';
 import { CreateCustomerDto } from '@/modules/customers/dto/create-customer.dto';
 import { UpdateCustomerDto } from '@/modules/customers/dto/update-customer.dto';
 import { QueryCustomerDto } from '@/modules/customers/dto/query-customer.dto';
-import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
+import { ERROR_MESSAGES } from '@/common/constants';
 
 @Injectable()
 export class CustomerService {

@@ -3,7 +3,7 @@ import { InventoryRepository } from '@/modules/inventory/inventory.repository';
 import { CreateInventoryDto } from '@/modules/inventory/dto/create-inventory.dto';
 import { UpdateInventoryDto } from '@/modules/inventory/dto/update-inventory.dto';
 import { QueryInventoryDto } from '@/modules/inventory/dto/query-inventory.dto';
-import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
+import { ERROR_MESSAGES } from '@/common/constants';
 
 @Injectable()
 export class InventoryService {

@@ -8,7 +8,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
-import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
+import { RequestWithUser } from '@/common/interfaces';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {

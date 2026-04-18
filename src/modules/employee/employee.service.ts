@@ -3,7 +3,7 @@ import { EmployeeRepository } from '@/modules/employee/employee.repository';
 import { CreateEmployeeDto } from '@/modules/employee/dto/create-employee.dto';
 import { UpdateEmployeeDto } from '@/modules/employee/dto/update-employee.dto';
 import { QueryEmployeeDto } from '@/modules/employee/dto/query-employee.dto';
-import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
+import { ERROR_MESSAGES } from '@/common/constants';
 
 @Injectable()
 export class EmployeeService {

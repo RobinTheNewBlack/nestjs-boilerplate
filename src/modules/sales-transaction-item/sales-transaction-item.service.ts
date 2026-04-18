@@ -3,7 +3,7 @@ import { SalesTransactionItemRepository } from '@/modules/sales-transaction-item
 import { CreateSalesTransactionItemDto } from '@/modules/sales-transaction-item/dto/create-sales-transaction-item.dto';
 import { UpdateSalesTransactionItemDto } from '@/modules/sales-transaction-item/dto/update-sales-transaction-item.dto';
 import { QuerySalesTransactionItemDto } from '@/modules/sales-transaction-item/dto/query-sales-transaction-item.dto';
-import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
+import { ERROR_MESSAGES } from '@/common/constants';
 
 @Injectable()
 export class SalesTransactionItemService {

@@ -3,7 +3,7 @@ import { ProductRepository } from '@/modules/product/product.repository';
 import { CreateProductDto } from '@/modules/product/dto/create-product.dto';
 import { UpdateProductDto } from '@/modules/product/dto/update-product.dto';
 import { QueryProductDto } from '@/modules/product/dto/query-product.dto';
-import { ERROR_MESSAGES } from '@/common/constants/error-messages.constant';
+import { ERROR_MESSAGES } from '@/common/constants';
 
 @Injectable()
 export class ProductService {

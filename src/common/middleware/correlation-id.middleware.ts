@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto'; // ใช้โมดูลที่มีอยู่แล้วใน Node.js ได้เลย
-import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
+import { RequestWithUser } from '@/common/interfaces';
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
